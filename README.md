@@ -3,6 +3,9 @@
 
 This project is an automated trading bot that uses deep learning to predict future stock prices and make trading decisions.
 
+## High Level Project Structure
+<img width="1150" height="781" alt="Screenshot from 2025-08-30 23-15-35" src="https://github.com/user-attachments/assets/60bc1a9d-1084-4771-9aa1-756a8d104cae" />
+
 ## How it Works
 
 - **Data Loading:**
