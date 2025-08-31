@@ -1,26 +1,16 @@
 """
-Sentiment Model Package
+Sentiment Classification Model
 
-This package contains components for sentiment analysis of financial text data,
-including web scraping, text processing, tokenization, and sentiment classification.
+This module contains the sentiment classification model implementation
+for analyzing financial text sentiment.
 
-Modules:
-    tokenize_pipeline: Text tokenization and preprocessing pipeline
-    classify_model: Sentiment classification models
-    web_scraper: C++ web scraping utilities (accessed via build system)
-    
 Author: ML Trading Bot Project
 """
 
 __version__ = "1.0.0"
 
-# Import available Python modules
+# Import model components when available
 try:
-    from .tokenize_pipeline import TokenizationPipeline, TokenizationConfig
+    from .model import *
 except ImportError:
     pass
-
-__all__ = [
-    "TokenizationPipeline",
-    "TokenizationConfig",
-]

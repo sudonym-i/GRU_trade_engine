@@ -75,5 +75,5 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     target_link_libraries(scraper_lib CURL::libcurl fmt::fmt)
     
     # Add the tests subdirectory
-    add_subdirectory(../../tests/sentiment_model/web_scraper ${CMAKE_CURRENT_BINARY_DIR}/tests)
+    add_subdirectory(./tests)
 endif()
