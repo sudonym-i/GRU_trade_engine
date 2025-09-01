@@ -8,8 +8,8 @@ import logging
 from pathlib import Path
 from datetime import datetime
 
-from integrated_model import UnifiedStockPredictor, AdaptiveUnifiedPredictor
-from data_pipelines.integrated_data_pipeline import UnifiedDataPipeline
+from .integrated_model import UnifiedStockPredictor, AdaptiveUnifiedPredictor
+from .data_pipelines.integrated_data_pipeline import UnifiedDataPipeline
 
 # Simple visualization function
 def plot_training_loss(train_losses, val_losses=None):

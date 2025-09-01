@@ -341,7 +341,7 @@ def cmd_simulate(args):
         engine = create_trading_engine(initial_balance=args.balance)
         
         # Import trading strategies
-        from engine.paper_trading import BuyAndHoldStrategy, MomentumStrategy, StrategyManager
+        from engine.trading_simulation import BuyAndHoldStrategy, MomentumStrategy, StrategyManager
         
         # Set up strategy
         if args.strategy == "buy_hold":
@@ -368,7 +368,7 @@ def cmd_simulate(args):
                     print(f"⚠️ Prediction failed for {symbol}: {e}")
                     return None
             
-            from engine.paper_trading.strategies import MLPredictionStrategy
+            from engine.trading_simulation.strategies import MLPredictionStrategy
             strategy = MLPredictionStrategy(
                 model_predictor=ml_predictor,
                 confidence_threshold=0.6,

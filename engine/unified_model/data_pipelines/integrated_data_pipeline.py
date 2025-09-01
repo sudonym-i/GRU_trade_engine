@@ -7,8 +7,8 @@ from typing import Dict, List, Tuple, Optional
 import logging
 
 # Import local pipeline components
-from data_pipelines.stock_pipeline import TSRDataLoader, add_technical_indicators, create_sequences
-from data_pipelines.financial_pipeline import FinancialDataFetcher
+from .stock_pipeline import TSRDataLoader, add_technical_indicators, create_sequences
+from .financial_pipeline import FinancialDataFetcher
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
