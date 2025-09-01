@@ -251,7 +251,7 @@ ChainConfig parse_crawlchain() {
     }
     
     // Construct the URL using fmt::format with the stock name
-    scrapeConfig.url = fmt::format("https://filmot.com/search/{}%20stock/1?gridView=1", stock_name);
+    scrapeConfig.url = fmt::format("https://filmot.com/search/{}%20stock/1?sortField=uploaddate&sortOrder=desc&gridView=1&", stock_name);
     
     // Validate that all required fields are present
     if (scrapeConfig.start_tag.empty() || scrapeConfig.end_tag.empty() || scrapeConfig.url.empty()) {
