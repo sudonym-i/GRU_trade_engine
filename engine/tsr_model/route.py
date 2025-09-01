@@ -1,9 +1,15 @@
 import json
 import os
-from .model import GRUPredictor
-from .data_pipeline import make_dataset
-from .train import train_gru_predictor
-from .trade import simulate_trading
+try:
+    from .model import GRUPredictor
+    from .data_pipeline import make_dataset
+    from .train import train_gru_predictor
+    from .trade import simulate_trading
+except ImportError:
+    from model import GRUPredictor
+    from data_pipeline import make_dataset
+    from train import train_gru_predictor
+    from trade import simulate_trading
 
 
 def train_model():

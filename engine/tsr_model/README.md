@@ -1,11 +1,24 @@
 # TSR Model (Time Series Regression Model)
 
-A comprehensive time series regression model for stock price prediction and automated trading using GRU (Gated Recurrent Unit) neural networks.
+A comprehensive time series regression model for stock price prediction and automated trading using GRU (Gated Recurrent Unit) neural networks and Financial Modeling Prep API.
+
+## Quick Start
+
+```python
+# Set your API key
+export FMP_API_KEY=your_api_key_here
+
+# Run the example
+python examples/basic_usage.py
+
+# Or run tests
+python tests/test_fmp_integration.py
+```
 
 ## Overview
 
 The TSR model is a deep learning-based system that:
-1. Fetches stock market data using Yahoo Finance API
+1. Fetches stock market data using Financial Modeling Prep API
 2. Calculates technical indicators (SMA, RSI, MACD)
 3. Trains a GRU neural network to predict future stock prices
 4. Simulates automated trading strategies based on predictions
@@ -18,17 +31,18 @@ The TSR model is a deep learning-based system that:
   - **Input Layer**: Variable input dimensions based on features (Close, SMA_14, RSI_14, MACD)
   - **GRU Layer**: 3-layer GRU with 128 hidden units and batch_first=True
   - **Fully Connected Layers**: 
-    - FC1: 128 � 64 neurons with SiLU activation
+    - FC1: 128 � 64 neurons with SiLU activation
     - Dropout: 20% for regularization
-    - FC2: 64 � 1 neuron (price prediction output)
+    - FC2: 64 � 1 neuron (price prediction output)
   - **Forward Pass**: Takes last time step output from GRU sequence
 
 ### Data Processing Pipeline
 
-#### Data Handler (`data_handler.py`)
-- **DataLoader Class**: Downloads stock data from Yahoo Finance
+#### Data Pipeline (`data_pipeline.py`)
+- **DataLoader Class**: Downloads stock data from Financial Modeling Prep API
   - Supports multiple tickers, date ranges, and intervals (1d, 1h, 5m)
   - Handles data cleaning and NaN removal
+  - Requires FMP_API_KEY environment variable or api_key parameter
   
 - **make_dataset Function**: Core data preprocessing pipeline
   - Downloads OHLCV data for specified tickers
@@ -148,7 +162,7 @@ The `train_gru_predictor` function implements:
 ## Data Flow
 
 1. **Configuration Loading**: JSON configs specify tickers, dates, and hyperparameters
-2. **Data Acquisition**: Yahoo Finance API downloads OHLCV data
+2. **Data Acquisition**: Financial Modeling Prep API downloads OHLCV data
 3. **Feature Engineering**: Technical indicators added to raw price data
 4. **Sequence Generation**: Time series converted to supervised learning format
 5. **Normalization**: Z-score normalization applied for training stability
@@ -172,20 +186,55 @@ See `requirements.txt`:
 - **torch**: PyTorch deep learning framework
 - **pandas**: Data manipulation and analysis
 - **numpy**: Numerical computing
-- **yfinance**: Yahoo Finance data API
+- **requests**: HTTP library for API calls to Financial Modeling Prep
 - **scikit-learn**: Machine learning utilities
 - **matplotlib**: Static plotting
 - **seaborn**: Statistical visualization
 - **plotly**: Interactive visualizations
 
+## File Structure
+
+```
+tsr_model/
+├── __init__.py              # Package initialization and exports
+├── model.py                 # GRU neural network model
+├── data_pipeline.py         # Financial Modeling Prep API integration
+├── utils.py                 # Technical indicators and utilities
+├── train.py                 # Model training functions
+├── trade.py                 # Trading simulation and strategies
+├── route.py                 # Main training/testing pipeline
+├── visualizations.py        # Plotting and visualization functions
+├── test.py                  # Comprehensive test suite
+├── requirements.txt         # Python dependencies
+├── README.md               # This file
+├── docs/
+│   └── FMP_API_SETUP.md    # API setup documentation
+├── examples/
+│   └── basic_usage.py      # Basic usage example
+└── tests/
+    └── test_fmp_integration.py  # API integration tests
+```
+
 ## Usage
 
+### Basic Usage
 ```python
-# Train a model
+from tsr_model import DataLoader, GRUPredictor, train_gru_predictor
+
+# Load data
+loader = DataLoader("AAPL", "2023-01-01", "2023-12-31")
+data = loader.download()
+
+# Train model (see examples/basic_usage.py for complete example)
+```
+
+### Full Pipeline
+```python
+# Train a model using configuration
 trained_model = train_model()
 
 # Test the model with trading simulation  
-test_model(trained_model)
+test_run_model(trained_model)
 ```
 
 The system automatically handles data download, preprocessing, training, and generates comprehensive performance reports with visualizations.

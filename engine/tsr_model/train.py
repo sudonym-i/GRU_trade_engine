@@ -1,10 +1,9 @@
 import torch
-from torch.utils.data import DataLoader as TorchDataLoader, TensorDataset
-from .model import GRUPredictor
-from .data_pipeline import DataLoader
-from .utils import create_sequences, add_technical_indicators
-from .visualizations import plot_training_loss
-import numpy as np
+from torch.utils.data import DataLoader as TorchDataLoader
+try:
+    from .visualizations import plot_training_loss
+except ImportError:
+    from visualizations import plot_training_loss
 
 
 def train_gru_predictor(model, dataset, epochs=10, batch_size=32, lr=1e-3, plot_loss=True):
@@ -33,6 +32,8 @@ def train_gru_predictor(model, dataset, epochs=10, batch_size=32, lr=1e-3, plot_
 		print(f"[INFO] Epoch {epoch+1}/{epochs}, Average Loss: {avg_loss:.4f}")
 	
 	print("[INFO] Training complete.")
+
+	torch.save(model.state_dict(), "engine/tsr_model/cached_models/model.pth")
 	
 	if plot_loss and losses:
 		plot_training_loss(losses)

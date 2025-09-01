@@ -5,11 +5,10 @@ class GRUPredictor(nn.Module):
     def __init__(self, input_dim, hidden_dim=128, num_layers=3):
         super().__init__()
         self.gru = nn.GRU(input_dim, hidden_dim, num_layers, batch_first=True)
-        self.relu = nn.ReLU()
         self.fc1 = nn.Linear(hidden_dim, 64)
-        self.relu = nn.ReLU()
         self.fc2 = nn.Linear(64, 1)
         self.dropout = nn.Dropout(0.2)
+        self.relu = nn.ReLU()
 
     def forward(self, x):
         # x: (batch, seq_len, input_dim)

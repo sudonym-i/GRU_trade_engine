@@ -1,6 +1,9 @@
 import numpy as np
 import torch
-from .visualizations import plot_portfolio_performance, plot_price_predictions, plot_performance_metrics
+try:
+    from .visualizations import plot_portfolio_performance, plot_price_predictions, plot_performance_metrics
+except ImportError:
+    from visualizations import plot_portfolio_performance, plot_price_predictions, plot_performance_metrics
 
 class TradingSimulator:
     def __init__(self, initial_balance=1000):

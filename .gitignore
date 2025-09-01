@@ -291,4 +291,4 @@ htmlcov/
 .coverage
 
 # Profiling data
-*.prof
+*.prof.env

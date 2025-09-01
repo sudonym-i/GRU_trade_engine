@@ -86,7 +86,7 @@ int main() {
         DataList crawledData(config.chains);
 
         // Open output file for writing scraped content (RAII ensures cleanup)
-        std::ofstream outfile("../../" + config.output_name);
+        std::ofstream outfile("../../raw_data/" + config.output_name);
         if (!outfile.is_open()) {
             throw std::runtime_error("Failed to open output file: " + config.output_name);
         }

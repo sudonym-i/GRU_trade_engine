@@ -25,7 +25,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 # Check for dependencies
 TORCH_AVAILABLE = True
 PANDAS_AVAILABLE = True
-YFINANCE_AVAILABLE = True
+REQUESTS_AVAILABLE = True
 MATPLOTLIB_AVAILABLE = True
 
 try:
@@ -43,10 +43,10 @@ except ImportError:
     print("Warning: Pandas not available. Some tests will be skipped.")
 
 try:
-    import yfinance as yf
+    import requests
 except ImportError:
-    YFINANCE_AVAILABLE = False
-    print("Warning: yfinance not available. Some tests will be skipped.")
+    REQUESTS_AVAILABLE = False
+    print("Warning: requests not available. Some tests will be skipped.")
 
 try:
     import matplotlib.pyplot as plt
@@ -128,7 +128,7 @@ class TestDataPipeline(unittest.TestCase):
     
     def setUp(self):
         """Set up test fixtures."""
-        if not (PANDAS_AVAILABLE and YFINANCE_AVAILABLE):
+        if not (PANDAS_AVAILABLE and REQUESTS_AVAILABLE):
             self.skipTest("Required dependencies not available")
         
         from data_pipeline import DataLoader, make_dataset
@@ -137,50 +137,57 @@ class TestDataPipeline(unittest.TestCase):
     
     def test_data_loader_initialization(self):
         """Test DataLoader initialization."""
-        # Test single ticker
-        loader = self.DataLoader("AAPL", "2023-01-01", "2023-01-31")
+        # Test single ticker with mock API key
+        loader = self.DataLoader("AAPL", "2023-01-01", "2023-01-31", api_key="test_key")
         self.assertEqual(loader.tickers, ["AAPL"])
         self.assertEqual(loader.start, "2023-01-01")
         self.assertEqual(loader.end, "2023-01-31")
+        self.assertEqual(loader.api_key, "test_key")
         
         # Test multiple tickers
         tickers = ["AAPL", "GOOGL", "MSFT"]
-        loader = self.DataLoader(tickers, "2023-01-01", "2023-01-31")
+        loader = self.DataLoader(tickers, "2023-01-01", "2023-01-31", api_key="test_key")
         self.assertEqual(loader.tickers, tickers)
     
-    @patch('yfinance.download')
-    def test_data_loader_download_success(self, mock_yf_download):
+    @patch('requests.get')
+    def test_data_loader_download_success(self, mock_requests_get):
         """Test successful data download."""
-        # Mock yfinance data
-        mock_data = pd.DataFrame({
-            'Open': [100, 101, 102],
-            'High': [105, 106, 107],
-            'Low': [99, 100, 101],
-            'Close': [104, 105, 106],
-            'Volume': [1000, 1100, 1200]
-        })
-        mock_yf_download.return_value = mock_data
+        # Mock FMP API response
+        mock_response = MagicMock()
+        mock_response.raise_for_status.return_value = None
+        mock_response.json.return_value = {
+            'historical': [
+                {'date': '2023-01-03', 'open': 100, 'high': 105, 'low': 99, 'close': 104, 'volume': 1000},
+                {'date': '2023-01-02', 'open': 101, 'high': 106, 'low': 100, 'close': 105, 'volume': 1100},
+                {'date': '2023-01-01', 'open': 102, 'high': 107, 'low': 101, 'close': 106, 'volume': 1200}
+            ]
+        }
+        mock_requests_get.return_value = mock_response
         
-        loader = self.DataLoader("AAPL", "2023-01-01", "2023-01-31")
+        loader = self.DataLoader("AAPL", "2023-01-01", "2023-01-31", api_key="test_key")
         data = loader.download()
         
         self.assertIn("AAPL", data)
         self.assertIsInstance(data["AAPL"], pd.DataFrame)
-        mock_yf_download.assert_called_once()
+        mock_requests_get.assert_called_once()
     
-    @patch('yfinance.download')
-    def test_data_loader_download_empty(self, mock_yf_download):
+    @patch('requests.get')
+    def test_data_loader_download_empty(self, mock_requests_get):
         """Test handling of empty data download."""
-        mock_yf_download.return_value = pd.DataFrame()
+        # Mock empty response
+        mock_response = MagicMock()
+        mock_response.raise_for_status.return_value = None
+        mock_response.json.return_value = {'historical': []}
+        mock_requests_get.return_value = mock_response
         
-        loader = self.DataLoader("INVALID", "2023-01-01", "2023-01-31")
+        loader = self.DataLoader("INVALID", "2023-01-01", "2023-01-31", api_key="test_key")
         data = loader.download()
         
         self.assertNotIn("INVALID", data)
     
     def test_data_loader_get_methods(self):
         """Test data retrieval methods."""
-        loader = self.DataLoader("AAPL", "2023-01-01", "2023-01-31")
+        loader = self.DataLoader("AAPL", "2023-01-01", "2023-01-31", api_key="test_key")
         
         # Mock some data
         mock_data = pd.DataFrame({'Close': [100, 101, 102]})
@@ -699,7 +706,7 @@ class TestRunner:
         print(f"\nENVIRONMENT:")
         print(f"  - PyTorch Available: {TORCH_AVAILABLE}")
         print(f"  - Pandas Available: {PANDAS_AVAILABLE}")
-        print(f"  - YFinance Available: {YFINANCE_AVAILABLE}")
+        print(f"  - Requests Available: {REQUESTS_AVAILABLE}")
         print(f"  - Matplotlib Available: {MATPLOTLIB_AVAILABLE}")
         print(f"  - Python Version: {sys.version}")
         
@@ -723,15 +730,15 @@ def main():
         missing_deps.append("torch")
     if not PANDAS_AVAILABLE:
         missing_deps.append("pandas")
-    if not YFINANCE_AVAILABLE:
-        missing_deps.append("yfinance")
+    if not REQUESTS_AVAILABLE:
+        missing_deps.append("requests")
     if not MATPLOTLIB_AVAILABLE:
         missing_deps.extend(["matplotlib", "seaborn", "plotly"])
     
     if missing_deps:
         print(f"\nWarning: Missing dependencies: {', '.join(missing_deps)}")
         print("Some tests may be skipped. Install with:")
-        print("pip install torch pandas yfinance matplotlib seaborn plotly")
+        print("pip install torch pandas requests matplotlib seaborn plotly")
     
     # Run tests
     test_runner = TestRunner()

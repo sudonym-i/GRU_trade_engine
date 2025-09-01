@@ -1,4 +1,7 @@
 
+import numpy as np
+import pandas as pd
+
 
 def add_technical_indicators(df):
     """Add SMA, RSI, and MACD to the dataframe as new columns."""
@@ -16,8 +19,6 @@ def add_technical_indicators(df):
     df['MACD'] = ema12 - ema26
     df = df.dropna()
     return df
-import numpy as np
-import pandas as pd
 
 
 def create_sequences(data: pd.DataFrame, seq_length: int):

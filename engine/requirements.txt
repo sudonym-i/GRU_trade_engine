@@ -18,6 +18,9 @@ scikit-learn>=1.0.0              # Machine learning library
 transformers>=4.20.0             # Hugging Face transformers for NLP (sentiment analysis)
 datasets>=2.0.0                  # Hugging Face datasets library
 tokenizers>=0.13.0               # Fast tokenizers for NLP
+textblob>=0.17.1                 # TextBlob for sentiment analysis
+vaderSentiment>=3.3.2            # VADER sentiment analysis tool
+nltk>=3.8.0                      # Natural Language Toolkit
 
 # Data Visualization
 # ============================================================================
@@ -25,9 +28,10 @@ matplotlib>=3.5.0                # Plotting library
 seaborn>=0.11.0                  # Statistical data visualization
 plotly>=5.0.0                    # Interactive plotting
 
-# Financial Data
+# Financial Data APIs
 # ============================================================================
-yfinance>=0.1.87                 # Yahoo Finance API for stock data
+yfinance>=0.1.87                 # Yahoo Finance API for stock data (legacy support)
+# Note: TSR and News Sentiment modules now use Financial Modeling Prep API via requests
 
 # Data Processing & Utilities
 # ============================================================================
