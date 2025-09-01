@@ -3,14 +3,13 @@ import torch.nn as nn
 from torch.utils.data import DataLoader, random_split
 import numpy as np
 import matplotlib.pyplot as plt
-from typing import Dict, List, Tuple, Optional
+from typing import Dict, List, Optional
 import logging
 from pathlib import Path
-import json
 from datetime import datetime
 
 from integrated_model import UnifiedStockPredictor, AdaptiveUnifiedPredictor
-from engine.unified_model.data_pipelines.integrated_data_pipeline import UnifiedDataPipeline
+from data_pipelines.integrated_data_pipeline import UnifiedDataPipeline
 
 # Simple visualization function
 def plot_training_loss(train_losses, val_losses=None):
@@ -153,7 +152,7 @@ class UnifiedTrainer:
         
         # Learning rate scheduler
         scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-            optimizer, mode='min', factor=0.7, patience=5, verbose=True
+            optimizer, mode='min', factor=0.7, patience=5
         )
         
         best_val_loss = float('inf')
