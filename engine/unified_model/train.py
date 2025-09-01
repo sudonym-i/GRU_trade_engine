@@ -344,7 +344,7 @@ def train_unified_model(tickers: List[str], start_date: str, end_date: str,
         batch_size=kwargs.get('batch_size', 32),
         learning_rate=kwargs.get('learning_rate', 1e-3),
         validation_split=kwargs.get('validation_split', 0.2),
-        save_path=f"engine/models/unified_{model_type}_model.pth"
+        save_path=f"models/unified_{model_type}_model.pth"
     )
     
     # Plot training history

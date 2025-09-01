@@ -47,6 +47,7 @@ try:
                 from textblob import TextBlob
                 blob = TextBlob(str(text))
                 polarity = blob.sentiment.polarity
+                subjectivity = blob.sentiment.subjectivity
                 
                 if polarity > 0.1:
                     sentiment = "positive"
@@ -54,10 +55,19 @@ try:
                     sentiment = "negative"
                 else:
                     sentiment = "neutral"
+                
+                # Calculate confidence based on polarity magnitude and subjectivity
+                # Higher subjectivity indicates more opinion-based text (better for sentiment)
+                # Higher absolute polarity indicates stronger sentiment
+                confidence = min(abs(polarity) + (subjectivity * 0.3), 1.0)
+                
+                # Ensure minimum confidence for neutral sentiment
+                if sentiment == "neutral" and confidence < 0.2:
+                    confidence = 0.2
                     
                 return {
                     "sentiment": sentiment,
-                    "confidence": abs(polarity),
+                    "confidence": confidence,
                     "polarity": polarity
                 }
             except ImportError:

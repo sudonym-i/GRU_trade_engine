@@ -20,6 +20,24 @@ import sys
 from datetime import datetime, timedelta
 from pathlib import Path
 
+# Import engine functions
+try:
+    from engine import (
+        train_model, 
+        predict_price, 
+        get_model_info, 
+        list_available_models,
+        analyze_sentiment,
+        pull_from_web,
+        create_trading_engine
+    )
+except ImportError as e:
+    print(f"❌ Failed to import engine functions: {e}")
+    print("Make sure you're running from the project root directory")
+    sys.exit(1)
+
+
+
 # Add current directory to path for engine imports
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
@@ -65,21 +83,6 @@ class Colors:
     @staticmethod
     def dim(text): return f"{Colors.DIM}{text}{Colors.RESET}"
 
-# Import engine functions
-try:
-    from engine import (
-        train_model, 
-        predict_price, 
-        get_model_info, 
-        list_available_models,
-        analyze_sentiment,
-        pull_from_web,
-        create_trading_engine
-    )
-except ImportError as e:
-    print(f"❌ Failed to import engine functions: {e}")
-    print("Make sure you're running from the project root directory")
-    sys.exit(1)
 
 
 def cmd_train(args):
@@ -135,7 +138,7 @@ def cmd_train(args):
 
 
 def cmd_predict(args):
-    """Make price predictions using a trained model."""
+    """Make price predictions using a trained model with sentiment analysis."""
     # Set logging level to reduce noise
     import logging
     logging.getLogger('engine.unified_model').setLevel(logging.ERROR)
@@ -161,6 +164,41 @@ def cmd_predict(args):
     
     print(f"{Colors.cyan('Predicting')} {Colors.bold(args.ticker.upper())} {Colors.cyan('price using')} {Colors.magenta(model_name)}...")
     
+    # Pull sentiment data for the ticker
+    print(f"{Colors.cyan('Gathering sentiment data for')} {Colors.bold(args.ticker.upper())}...")
+    try:
+        sentiment_result = pull_from_web(args.ticker)
+        if sentiment_result.get('success') and sentiment_result.get('data_collected'):
+            print(f"{Colors.green('✓')} Sentiment data collected successfully")
+            
+            # Analyze sentiment from the scraped data
+            print(Colors.cyan("Analyzing sentiment..."))
+            sentiment_analysis = analyze_sentiment()
+            
+            if sentiment_analysis.get('success'):
+                stats = sentiment_analysis.get('statistics', {})
+                overall_sentiment = stats.get('overall_sentiment', 'neutral')
+                sentiment_confidence = stats.get('sentiment_confidence', 0)
+                
+                print(f"{Colors.green('✓')} Sentiment analysis complete")
+                print(f"  {Colors.blue('Overall Sentiment:')} {overall_sentiment.title()}")
+                print(f"  {Colors.blue('Confidence:')} {sentiment_confidence:.1%}")
+            else:
+                print(f"{Colors.yellow('⚠')} Sentiment analysis failed: {sentiment_analysis.get('message', 'Unknown error')}")
+                overall_sentiment = 'neutral'
+                sentiment_confidence = 0.5
+        else:
+            print(f"{Colors.yellow('⚠')} Could not gather sentiment data: {sentiment_result.get('message', 'Unknown error')}")
+            overall_sentiment = 'neutral'
+            sentiment_confidence = 0.5
+            
+    except Exception as e:
+        print(f"{Colors.yellow('⚠')} Sentiment analysis error: {e}")
+        overall_sentiment = 'neutral' 
+        sentiment_confidence = 0.5
+    
+    # Make price prediction
+    print(Colors.cyan("Making price prediction..."))
     try:
         result = predict_price(
             ticker=args.ticker,
@@ -169,7 +207,7 @@ def cmd_predict(args):
         )
         
         print(f"\n{Colors.bold(Colors.blue(result['ticker'] + ' Price Prediction'))}")
-        print("─" * 40)
+        print("─" * 50)
         print(f"{Colors.green('Predicted Price:')}  ${result['predicted_price']:.2f}")
         
         if args.confidence and 'confidence_interval' in result:
@@ -178,6 +216,18 @@ def cmd_predict(args):
             print(f"{Colors.magenta('Uncertainty:')}      {result['uncertainty']:.1%}")
         
         print(f"{Colors.blue('Prediction Date:')}  {result['prediction_date']}")
+        print()
+        print(f"{Colors.cyan('Sentiment Analysis:')}")
+        print(f"  {Colors.green('Overall Sentiment:')} {overall_sentiment.title()}")
+        print(f"  {Colors.green('Confidence:')} {sentiment_confidence:.1%}")
+        
+        # Provide sentiment-based guidance
+        if overall_sentiment == 'positive' and sentiment_confidence > 0.6:
+            print(f"{Colors.green('📈 Sentiment suggests bullish market mood')}")
+        elif overall_sentiment == 'negative' and sentiment_confidence > 0.6:
+            print(f"{Colors.red('📉 Sentiment suggests bearish market mood')}")
+        else:
+            print(f"{Colors.yellow('📊 Mixed or neutral sentiment detected')}")
         
     except Exception as e:
         print(Colors.red(f"ERROR: Prediction failed: {e}"))
@@ -219,6 +269,69 @@ def cmd_sentiment(args):
         
     except Exception as e:
         print(Colors.red(f"ERROR: Sentiment analysis failed: {e}"))
+        return 1
+    
+    return 0
+
+
+def cmd_list_models(args):
+    """List available trained models."""
+    models = list_available_models()
+    
+    if not models:
+        print(Colors.yellow("No trained models found."))
+        print("Train a model first with:")
+        print(Colors.dim("   python main.py train --tickers AAPL MSFT --days 365"))
+        return 0
+    
+    print(f"\n{Colors.bold(Colors.blue('Available Models'))}")
+    print("─" * 40)
+    
+    for i, model in enumerate(models, 1):
+        print(f"{Colors.green(f'{i}.')} {Colors.bold(Path(model['file_path']).name)}")
+        print(f"   {Colors.blue('Path:')} {model['file_path']}")
+        if 'size' in model:
+            print(f"   {Colors.blue('Size:')} {model['size']}")
+        if 'modified' in model:
+            print(f"   {Colors.blue('Modified:')} {model['modified']}")
+        print()
+    
+    return 0
+
+
+def cmd_info(args):
+    """Show model information."""
+    if not os.path.exists(args.model):
+        print(Colors.red(f"ERROR: Model file not found: {args.model}"))
+        return 1
+    
+    try:
+        info = get_model_info(args.model)
+        model_name = Path(args.model).name
+        
+        print(f"\n{Colors.bold(Colors.blue(f'Model Information: {model_name}'))}")
+        print("─" * 50)
+        
+        for key, value in info.items():
+            if key == 'file_path':
+                continue
+            
+            key_display = key.replace('_', ' ').title()
+            
+            if isinstance(value, float):
+                if key in ['validation_loss', 'training_loss']:
+                    print(f"{Colors.green(key_display + ':')} {value:.6f}")
+                else:
+                    print(f"{Colors.green(key_display + ':')} {value:.4f}")
+            elif isinstance(value, int):
+                print(f"{Colors.green(key_display + ':')} {value}")
+            else:
+                print(f"{Colors.green(key_display + ':')} {value}")
+        
+        print(f"\n{Colors.blue('File Path:')} {args.model}")
+        
+    except Exception as e:
+        print(Colors.red(f"ERROR: Could not read model info: {e}"))
         return 1
     
     return 0
@@ -280,8 +393,8 @@ def main():
     sim_parser = subparsers.add_parser('simulate', help='Run automated trading simulation')
     sim_parser.add_argument('--tickers', nargs='+', default=['AAPL', 'MSFT'], 
                            help='Stock tickers to trade')
-    sim_parser.add_argument('--balance', type=float, default=100000,
-                           help='Starting balance (default: $100,000)')
+    sim_parser.add_argument('--balance', type=float, default=1000,
+                           help='Starting balance (default: $1,000)')
     sim_parser.add_argument('--days', type=int, default=30,
                            help='Simulation duration in days')
     sim_parser.add_argument('--strategy', choices=['buy_hold', 'momentum', 'ml_prediction'],

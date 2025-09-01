@@ -28,12 +28,15 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-def pull_from_web() -> Dict[str, Union[bool, str, int]]:
+def pull_from_web(search_query: str) -> Dict[str, Union[bool, str, int]]:
     """
     Execute the webscraper to pull data from configured web sources.
     
     This function navigates to the web_scraper build directory and executes
-    the compiled webscraper binary to collect fresh data.
+    the compiled webscraper binary to collect fresh data based on the search query.
+    
+    Args:
+        search_query (str): The search term/query to use for web scraping
     
     Returns:
         Dict: Status report containing success flag, message, and exit code
@@ -89,10 +92,10 @@ def pull_from_web() -> Dict[str, Union[bool, str, int]]:
             if chmod_result.returncode != 0:
                 logger.warning(f"chmod warning: {chmod_result.stderr}")
             
-            # Execute the webscraper
-            logger.info("Executing webscraper...")
+            # Execute the webscraper with search query
+            logger.info(f"Executing webscraper with query: {search_query}")
             result = subprocess.run(
-                [f"./{webscraper_exe}"],
+                [f"./{webscraper_exe}", search_query],
                 capture_output=True,
                 text=True,
                 timeout=300  # 5 minute timeout
@@ -151,12 +154,15 @@ def pull_from_web() -> Dict[str, Union[bool, str, int]]:
         }
 
 
-def analyze_sentiment() -> Dict[str, Union[bool, str, List[Dict], Dict]]:
+def analyze_sentiment(raw_data: Optional[str] = None) -> Dict[str, Union[bool, str, List[Dict], Dict]]:
     """
-    Analyze sentiment of scraped data from youtube.raw file.
+    Analyze sentiment of scraped data, either from provided raw data or from youtube.raw file.
     
-    This function reads the raw YouTube transcript data, processes it through
-    the tokenization pipeline, and performs sentiment analysis using the BERT model.
+    This function processes raw text data through the tokenization pipeline, 
+    and performs sentiment analysis using the BERT model.
+    
+    Args:
+        raw_data (Optional[str]): Raw text data to analyze. If None, reads from youtube.raw file.
     
     Returns:
         Dict: Analysis results containing sentiment predictions and statistics
@@ -168,25 +174,29 @@ def analyze_sentiment() -> Dict[str, Union[bool, str, List[Dict], Dict]]:
     youtube_raw_path = current_dir / "youtube.raw"
     
     try:
-        # Check if youtube.raw exists
-        if not youtube_raw_path.exists():
-            error_msg = f"YouTube raw data file not found: {youtube_raw_path}"
-            logger.error(error_msg)
-            return {
-                "success": False,
-                "message": error_msg,
-                "predictions": [],
-                "statistics": {}
-            }
+        # Use provided raw_data or read from file
+        if raw_data is None:
+            # Check if youtube.raw exists
+            if not youtube_raw_path.exists():
+                error_msg = f"YouTube raw data file not found: {youtube_raw_path}"
+                logger.error(error_msg)
+                return {
+                    "success": False,
+                    "message": error_msg,
+                    "predictions": [],
+                    "statistics": {}
+                }
+            
+            logger.info(f"Reading raw data from file: {youtube_raw_path}")
+            
+            # Read raw data from file
+            with open(youtube_raw_path, 'r', encoding='utf-8') as f:
+                raw_data = f.read()
+        else:
+            logger.info("Using provided raw data")
         
-        logger.info(f"Found raw data file: {youtube_raw_path}")
-        
-        # Read raw data
-        with open(youtube_raw_path, 'r', encoding='utf-8') as f:
-            raw_data = f.read()
-        
-        if not raw_data.strip():
-            error_msg = "YouTube raw data file is empty"
+        if not raw_data or not raw_data.strip():
+            error_msg = "Raw data is empty"
             logger.error(error_msg)
             return {
                 "success": False,
