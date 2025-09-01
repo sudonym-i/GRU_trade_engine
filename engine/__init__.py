@@ -28,7 +28,7 @@ Example usage:
 
 # Import sentiment analysis functions
 try:
-    from .sentiment_model.route import pull_from_web as _pull_from_web, analyze_sentiment as _analyze_sentiment_file
+    from .sentiment_model.api import pull_from_web as _pull_from_web, analyze_sentiment as _analyze_sentiment_file
     
     # Create wrapper functions that match the expected interface
     def pull_from_web(url=None):

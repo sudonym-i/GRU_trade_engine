@@ -252,7 +252,7 @@ if __name__ == "__main__":
         historical_data = fetcher.get_historical_features("AAPL", periods=8, period_type="quarter")
         
         if not historical_data.empty:
-            print(f"✅ Historical data shape: {historical_data.shape}")
+            print(f"SUCCESS: Historical data shape: {historical_data.shape}")
             print(f"Columns: {list(historical_data.columns)}")
             print(f"Date range: {historical_data['date'].min()} to {historical_data['date'].max()}")
             
@@ -261,20 +261,20 @@ if __name__ == "__main__":
             print(historical_data.head(2))
             
         else:
-            print("❌ No historical data retrieved")
+            print("ERROR: No historical data retrieved")
         
         # Test current features
         print("\nTesting current features...")
         current_data = fetcher.get_current_features("AAPL")
         
         if not current_data.empty:
-            print(f"✅ Current data shape: {current_data.shape}")
+            print(f"SUCCESS: Current data shape: {current_data.shape}")
             print("Current features sample:")
             print(current_data.iloc[0])
         else:
-            print("❌ No current data retrieved")
+            print("ERROR: No current data retrieved")
         
-        print("\n✅ Financial Pipeline test completed!")
+        print("\nSUCCESS: Financial Pipeline test completed!")
         
     except Exception as e:
-        print(f"❌ Financial Pipeline test failed: {e}")
+        print(f"ERROR: Financial Pipeline test failed: {e}")

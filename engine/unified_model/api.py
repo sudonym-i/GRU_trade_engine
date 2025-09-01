@@ -100,7 +100,7 @@ def train_model(tickers: List[str], start_date: str, end_date: str,
 
 def predict_price(ticker: str, model_path: str, 
                  prediction_date: Optional[str] = None,
-                 days_history: int = 60, 
+                 days_history: int = 30, 
                  include_confidence: bool = True) -> Dict[str, Any]:
     """
     Predict the next stock price using a trained unified model.
@@ -153,47 +153,108 @@ def predict_price(ticker: str, model_path: str,
         else:
             end_date = prediction_date
         
-        start_date = (datetime.strptime(end_date, '%Y-%m-%d') - timedelta(days=days_history + 30)).strftime('%Y-%m-%d')
+        start_date = (datetime.strptime(end_date, '%Y-%m-%d') - timedelta(days=days_history + 120)).strftime('%Y-%m-%d')
         
         # Create data pipeline and get recent data
         pipeline = UnifiedDataPipeline()
-        dataset = pipeline.create_unified_dataset(
-            tickers=[ticker],
-            start_date=start_date,
-            end_date=end_date,
-            seq_length=days_history,
-            normalize=True
-        )
+        
+        # First try with the model's expected sequence length
+        model_seq_length = 60  # Default model sequence length
+        try:
+            dataset = pipeline.create_unified_dataset(
+                tickers=[ticker],
+                start_date=start_date,
+                end_date=end_date,
+                seq_length=model_seq_length,
+                normalize=True
+            )
+        except ValueError as e:
+            if "must be greater than sequence length" in str(e):
+                # Not enough data for 60-day sequences, try with less data
+                logger.warning(f"Not enough data for {model_seq_length}-day sequences, trying with available data")
+                
+                # Get raw data to see how much we have
+                from .data_pipelines.stock_pipeline import TSRDataLoader, add_technical_indicators
+                tsr_loader = TSRDataLoader(ticker, start_date, end_date)
+                raw_data = tsr_loader.fetch_data()
+                if not raw_data.empty:
+                    price_data = add_technical_indicators(raw_data)
+                    available_days = len(price_data)
+                    # Use 80% of available data for sequence length
+                    adapted_seq_length = max(10, int(available_days * 0.8))
+                    logger.info(f"Using adapted sequence length: {adapted_seq_length} (from {available_days} available days)")
+                    
+                    dataset = pipeline.create_unified_dataset(
+                        tickers=[ticker],
+                        start_date=start_date,
+                        end_date=end_date,
+                        seq_length=adapted_seq_length,
+                        normalize=True
+                    )
+                else:
+                    raise ValueError(f"No price data available for {ticker}")
+            else:
+                raise e
         
         if len(dataset) == 0:
             raise ValueError(f"No data available for {ticker} in the specified range")
         
         # Get the most recent sequence
         X_recent, _ = dataset[-1]  # Most recent sequence
+        
+        # If sequence length doesn't match model expectation, adapt it
+        current_seq_len = X_recent.size(0)
+        if current_seq_len != model_seq_length:
+            logger.warning(f"Adapting sequence length from {current_seq_len} to {model_seq_length}")
+            if current_seq_len < model_seq_length:
+                # Pad with the first available values (repeat early data)
+                pad_size = model_seq_length - current_seq_len
+                padding = X_recent[0].unsqueeze(0).repeat(pad_size, 1)
+                X_recent = torch.cat([padding, X_recent], dim=0)
+            else:
+                # Truncate to match model expectation (take most recent data)
+                X_recent = X_recent[-model_seq_length:]
+        
         X_batch = X_recent.unsqueeze(0).to(device)  # Add batch dimension
+        
+        # Get the normalization parameters to denormalize the prediction
+        # We need to get the raw close prices to calculate the normalization params
+        from .data_pipelines.stock_pipeline import TSRDataLoader, add_technical_indicators
+        tsr_loader = TSRDataLoader(ticker, start_date, end_date)
+        raw_data = tsr_loader.fetch_data()
+        price_data_unnorm = add_technical_indicators(raw_data)
+        
+        # Calculate normalization parameters for Close price (same as in training)
+        close_mean = price_data_unnorm['Close'].mean()
+        close_std = price_data_unnorm['Close'].std() + 1e-8
         
         # Make prediction
         with torch.no_grad():
             if include_confidence:
                 result = model.predict_with_confidence(X_batch, num_samples=10)
                 
+                # Denormalize predictions
+                predicted_price = float(result['prediction'].item()) * close_std + close_mean
+                ci_lower = float(result['ci_lower'].item()) * close_std + close_mean
+                ci_upper = float(result['ci_upper'].item()) * close_std + close_mean
+                
                 prediction_result = {
                     'ticker': ticker,
-                    'predicted_price': float(result['prediction'].item()),
-                    'confidence_std': float(result['std'].item()),
-                    'confidence_interval': [
-                        float(result['ci_lower'].item()),
-                        float(result['ci_upper'].item())
-                    ],
+                    'predicted_price': predicted_price,
+                    'confidence_std': float(result['std'].item()) * close_std,  # Scale std too
+                    'confidence_interval': [ci_lower, ci_upper],
                     'uncertainty': float(result['uncertainty'].item()),
                     'prediction_date': end_date,
                     'model_path': model_path
                 }
             else:
                 prediction = model(X_batch)
+                # Denormalize prediction back to actual price scale
+                predicted_price = float(prediction.item()) * close_std + close_mean
+                
                 prediction_result = {
                     'ticker': ticker,
-                    'predicted_price': float(prediction.item()),
+                    'predicted_price': predicted_price,
                     'prediction_date': end_date,
                     'model_path': model_path
                 }
@@ -281,7 +342,7 @@ if __name__ == "__main__":
     
     # Check for API key
     if not os.getenv('FMP_API_KEY'):
-        print("❌ FMP_API_KEY not set. Please set your API key:")
+        print("ERROR: FMP_API_KEY not set. Please set your API key:")
         print("export FMP_API_KEY=your_api_key_here")
         exit(1)
     

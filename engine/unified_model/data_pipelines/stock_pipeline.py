@@ -254,9 +254,9 @@ if __name__ == "__main__":
             price_features = get_price_features("AAPL", "2023-01-01", "2024-01-01")
             print(f"Price features shape: {price_features.shape}")
             
-            print("✅ TSR Pipeline test successful!")
+            print("SUCCESS: TSR Pipeline test successful!")
         else:
-            print("❌ Failed to load data")
+            print("ERROR: Failed to load data")
             
     except Exception as e:
-        print(f"❌ TSR Pipeline test failed: {e}")
+        print(f"ERROR: TSR Pipeline test failed: {e}")

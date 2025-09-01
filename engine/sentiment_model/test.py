@@ -224,7 +224,7 @@ class TestSentimentRoute(unittest.TestCase):
     
     def setUp(self):
         """Set up test fixtures."""
-        from route import pull_from_web, analyze_sentiment
+        from engine.sentiment_model.api import pull_from_web, analyze_sentiment
         self.pull_from_web = pull_from_web
         self.analyze_sentiment = analyze_sentiment
         
@@ -377,7 +377,7 @@ class TestIntegration(unittest.TestCase):
         try:
             from tokenize_pipeline import TokenizationPipeline
             from model import BertSentimentModel
-            from route import analyze_sentiment
+            from engine.sentiment_model.api import analyze_sentiment
             integration_success = True
         except ImportError:
             integration_success = False
@@ -507,10 +507,10 @@ def main():
     success = test_runner.run_test_suite()
     
     if success:
-        print("\n✅ All tests passed!")
+        print("\nSUCCESS: All tests passed!")
         sys.exit(0)
     else:
-        print("\n❌ Some tests failed!")
+        print("\nERROR: Some tests failed!")
         sys.exit(1)
 
 
