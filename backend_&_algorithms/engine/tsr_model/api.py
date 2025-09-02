@@ -1,7 +1,7 @@
 """
-Unified Model API
+TSR Model API
 
-Main API functions for the unified stock prediction model.
+Main API functions for the TSR (Technical Stock Return) prediction model.
 Provides simple interfaces for training models and making predictions.
 """
 
@@ -12,11 +12,9 @@ from pathlib import Path
 from typing import List, Optional, Dict, Any
 from datetime import datetime, timedelta
 
-from .training import train_unified_model, UnifiedTrainer
-from .models import UnifiedStockPredictor, AdaptiveUnifiedPredictor
-from .data_pipelines.unified_pipeline import UnifiedDataPipeline
-from .data_pipelines.price_data import get_price_features
-from .data_pipelines.financial_data import get_financial_features
+from .training import train_tsr_model
+from .models import TSRStockPredictor, AdaptiveTSRPredictor
+from .data_pipelines.tsr_pipeline import TSRDataPipeline
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -26,7 +24,7 @@ def train_model(tickers: List[str], start_date: str, end_date: str,
                 model_type: str = "standard", save_path: Optional[str] = None,
                 interval: str = "2h", **kwargs) -> str:
     """
-    Train a unified stock prediction model.
+    Train a TSR stock prediction model.
     
     Args:
         tickers: List of stock symbols to train on (e.g., ["AAPL", "MSFT"])
@@ -49,7 +47,7 @@ def train_model(tickers: List[str], start_date: str, end_date: str,
             batch_size=32
         )
     """
-    logger.info(f"Training {model_type} unified model on {len(tickers)} tickers")
+    logger.info(f"Training {model_type} TSR model on {len(tickers)} tickers")
     logger.info(f"Training data: {start_date} to {end_date}")
     
     # Set default save path
@@ -57,7 +55,7 @@ def train_model(tickers: List[str], start_date: str, end_date: str,
         models_dir = Path("models")
         models_dir.mkdir(exist_ok=True)
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        save_path = f"models/unified_{model_type}_model_{timestamp}.pth"
+        save_path = f"models/tsr_{model_type}_model_{timestamp}.pth"
     
     # Default training parameters
     default_params = {
@@ -73,7 +71,7 @@ def train_model(tickers: List[str], start_date: str, end_date: str,
     
     try:
         # Train the model
-        trainer = train_unified_model(
+        trainer = train_tsr_model(
             tickers=tickers,
             start_date=start_date,
             end_date=end_date,
@@ -106,7 +104,7 @@ def predict_price(ticker: str, model_path: str,
                  interval: str = "2h",
                  include_confidence: bool = True) -> Dict[str, Any]:
     """
-    Predict the next stock price using a trained unified model.
+    Predict the next stock price using a trained TSR model.
     
     Args:
         ticker: Stock symbol (e.g., "AAPL")
@@ -122,7 +120,7 @@ def predict_price(ticker: str, model_path: str,
     Example:
         result = predict_price(
             ticker="AAPL",
-            model_path="models/unified_model.pth",
+            model_path="models/tsr_model.pth",
             include_confidence=True
         )
         print(f"Predicted price: ${result['predicted_price']:.2f}")
@@ -137,13 +135,18 @@ def predict_price(ticker: str, model_path: str,
         # Load model checkpoint
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         checkpoint = torch.load(model_path, map_location=device)
-        model_config = checkpoint['model_config']
+        model_config = checkpoint['model_config'].copy()
         
-        # Create model instance
-        if checkpoint['model_class'] == 'AdaptiveUnifiedPredictor':
-            model = AdaptiveUnifiedPredictor(**model_config)
+        # Remove financial_features if present (for backward compatibility)
+        if 'financial_features' in model_config:
+            del model_config['financial_features']
+        
+        # Create model instance (handle old model class names for backward compatibility)
+        model_class = checkpoint.get('model_class', 'TSRStockPredictor')
+        if model_class in ['AdaptiveTSRPredictor', 'AdaptiveUnifiedPredictor']:
+            model = AdaptiveTSRPredictor(**model_config)
         else:
-            model = UnifiedStockPredictor(**model_config)
+            model = TSRStockPredictor(**model_config)
         
         model.load_state_dict(checkpoint['model_state_dict'])
         model.to(device)
@@ -160,12 +163,12 @@ def predict_price(ticker: str, model_path: str,
         start_date = (datetime.strptime(end_date, '%Y-%m-%d') - timedelta(days=days_history + 120)).strftime('%Y-%m-%d')
         
         # Create data pipeline and get recent data
-        pipeline = UnifiedDataPipeline()
+        pipeline = TSRDataPipeline()
         
         # First try with the model's expected sequence length
         model_seq_length = 60  # Default model sequence length
         try:
-            dataset = pipeline.create_unified_dataset(
+            dataset = pipeline.create_tsr_dataset(
                 tickers=[ticker],
                 start_date=start_date,
                 end_date=end_date,
@@ -182,14 +185,14 @@ def predict_price(ticker: str, model_path: str,
                 from .data_pipelines.price_data import TSRDataLoader, add_technical_indicators
                 tsr_loader = TSRDataLoader(ticker, start_date, end_date, interval)
                 raw_data = tsr_loader.fetch_data()
-                if not raw_data.empty:
+                if raw_data is not None and not raw_data.empty:
                     price_data = add_technical_indicators(raw_data)
                     available_days = len(price_data)
                     # Use 80% of available data for sequence length
                     adapted_seq_length = max(10, int(available_days * 0.8))
                     logger.info(f"Using adapted sequence length: {adapted_seq_length} (from {available_days} available days)")
                     
-                    dataset = pipeline.create_unified_dataset(
+                    dataset = pipeline.create_tsr_dataset(
                         tickers=[ticker],
                         start_date=start_date,
                         end_date=end_date,
@@ -228,6 +231,8 @@ def predict_price(ticker: str, model_path: str,
         from .data_pipelines.price_data import TSRDataLoader, add_technical_indicators
         tsr_loader = TSRDataLoader(ticker, start_date, end_date, interval)
         raw_data = tsr_loader.fetch_data()
+        if raw_data is None or raw_data.empty:
+            raise ValueError(f"No price data available for {ticker}")
         price_data_unnorm = add_technical_indicators(raw_data)
         
         # Get current price (most recent close price)
@@ -347,39 +352,3 @@ def list_available_models(models_dir: str = "models") -> List[Dict[str, Any]]:
     return models_info
 
 
-if __name__ == "__main__":
-    # Example usage
-    print("=== Unified Model API Demo ===")
-    
-    # Using Yahoo Finance - no API key needed
-    print("Note: Using free Yahoo Finance data - no API key required")
-    
-    try:
-        # Demo training (uncomment to run)
-        # print("Training model...")
-        # model_path = train_model(
-        #     tickers=["AAPL"],
-        #     start_date="2023-01-01",
-        #     end_date="2024-01-01",
-        #     epochs=5,  # Short for demo
-        #     batch_size=16
-        # )
-        
-        # Demo prediction (requires trained model)
-        models = list_available_models()
-        if models:
-            print(f"Found {len(models)} trained models:")
-            for model in models[:3]:  # Show first 3
-                print(f"  - {model['file_name']} ({model['model_class']})")
-            
-            # Use most recent model for prediction demo
-            latest_model = models[0]['file_path']
-            print(f"\nTesting prediction with: {latest_model}")
-            
-            # result = predict_price("AAPL", latest_model)
-            # print(f"Predicted price: ${result['predicted_price']:.2f}")
-        else:
-            print("No trained models found. Train a model first.")
-            
-    except Exception as e:
-        print(f"Demo failed: {e}")

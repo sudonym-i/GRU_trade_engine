@@ -1,27 +1,12 @@
 #!/usr/bin/env python3
-"""
-Alternative Stock Data Sources
-
-Since FMP API has restricted access for legacy/free accounts, this module provides
-alternative free stock data sources including:
-1. Yahoo Finance (via yfinance) - Free, reliable
-2. Alpha Vantage - Free tier with API key  
-3. Polygon.io - Free tier available
-4. Mock data generator for testing
-
-Usage:
-    python alternative_stock_api.py --ticker NVDA --days 30
-"""
 
 import os
 import sys
-import json
-import argparse
 import requests
 import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
-from typing import Optional, Dict, List
+from typing import Optional
 import logging
 
 # Configure logging
@@ -287,108 +272,3 @@ def get_stock_data_smart(ticker: str, start_date: str, end_date: str, interval: 
     return data
 
 
-def update_stock_pipeline():
-    """Update the main stock pipeline to use the new data source."""
-    pipeline_file = "/media/sudonym/projects/neural_trade_engine/engine/unified_model/data_pipelines/stock_pipeline.py"
-    
-    try:
-        with open(pipeline_file, 'r') as f:
-            content = f.read()
-        
-        # Create backup
-        backup_file = pipeline_file + ".backup"
-        with open(backup_file, 'w') as f:
-            f.write(content)
-        logger.info(f"Created backup: {backup_file}")
-        
-        # Update the fetch_data method
-        new_fetch_method = '''    def fetch_data(self) -> Optional[pd.DataFrame]:
-        """
-        Fetch stock price data using alternative sources.
-        
-        Returns:
-            DataFrame with OHLCV data indexed by date
-        """
-        try:
-            # Use the smart fetcher
-            from .alternative_stock_api import get_stock_data_smart
-            
-            df = get_stock_data_smart(self.ticker, self.start_date, self.end_date)
-            
-            if df is None or df.empty:
-                logger.warning(f"No data found for {self.ticker}")
-                return None
-            
-            logger.info(f"Fetched {len(df)} records for {self.ticker}")
-            return df
-            
-        except Exception as e:
-            logger.error(f"Error fetching data for {self.ticker}: {e}")
-            return None'''
-        
-        # Replace the old fetch_data method
-        import re
-        pattern = r'def fetch_data\(self\).*?(?=\n    def|\nclass|\n\n\ndef|\Z)'
-        replacement = new_fetch_method
-        
-        updated_content = re.sub(pattern, replacement, content, flags=re.DOTALL)
-        
-        # Write updated content
-        with open(pipeline_file, 'w') as f:
-            f.write(updated_content)
-        
-        logger.info(f"Successfully updated {pipeline_file}")
-        return True
-        
-    except Exception as e:
-        logger.error(f"Failed to update stock pipeline: {e}")
-        return False
-
-
-def main():
-    """Test the alternative stock APIs."""
-    parser = argparse.ArgumentParser(description='Test alternative stock data sources')
-    parser.add_argument('--ticker', default='NVDA', help='Stock ticker symbol')
-    parser.add_argument('--days', type=int, default=30, help='Number of days of data')
-    parser.add_argument('--update-pipeline', action='store_true', 
-                       help='Update the main stock pipeline to use alternative sources')
-    
-    args = parser.parse_args()
-    
-    # Calculate dates
-    end_date = datetime.now().strftime('%Y-%m-%d')
-    start_date = (datetime.now() - timedelta(days=args.days)).strftime('%Y-%m-%d')
-    
-    logger.info(f"=== Testing Alternative Stock Data Sources ===")
-    logger.info(f"Ticker: {args.ticker}")
-    logger.info(f"Date range: {start_date} to {end_date}")
-    
-    # Test the smart fetcher
-    data = get_stock_data_smart(args.ticker, start_date, end_date)
-    
-    if data is not None and not data.empty:
-        logger.info("=== SUCCESS ===")
-        logger.info(f"Retrieved {len(data)} records")
-        logger.info(f"Date range: {data.index.min()} to {data.index.max()}")
-        logger.info(f"Price range: ${data['Close'].min():.2f} - ${data['Close'].max():.2f}")
-        logger.info(f"Sample data:")
-        print(data.head())
-        
-        if args.update_pipeline:
-            logger.info("\nUpdating main stock pipeline...")
-            if update_stock_pipeline():
-                logger.info("Pipeline updated successfully!")
-                logger.info("You can now run: python main.py predict --ticker NVDA")
-            else:
-                logger.error("Failed to update pipeline")
-        
-        return 0
-    else:
-        logger.error("=== FAILED ===")
-        logger.error("Could not retrieve stock data from any source")
-        return 1
-
-
-if __name__ == "__main__":
-    exit_code = main()
-    sys.exit(exit_code)

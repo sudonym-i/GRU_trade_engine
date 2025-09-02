@@ -175,36 +175,3 @@ def get_price_features(ticker: str, start_date: str, end_date: str,
     return features
 
 
-if __name__ == "__main__":
-    # Test the TSR pipeline
-    print("Testing TSR Pipeline...")
-    
-    try:
-        # Test data loading
-        loader = TSRDataLoader("AAPL", "2023-01-01", "2024-01-01")
-        data = loader.fetch_data()
-        
-        if data is not None:
-            print(f"Loaded {len(data)} records for AAPL")
-            print(f"Date range: {data.index.min()} to {data.index.max()}")
-            
-            # Test technical indicators
-            data_with_indicators = add_technical_indicators(data)
-            print(f"Data shape with indicators: {data_with_indicators.shape}")
-            print(f"Columns: {list(data_with_indicators.columns)}")
-            
-            # Test sequence creation
-            features = data_with_indicators[['Close', 'SMA_14', 'RSI_14', 'MACD']]
-            X, y = create_sequences(features, seq_length=30)
-            print(f"Sequences: X={X.shape}, y={y.shape}")
-            
-            # Test get_price_features function
-            price_features = get_price_features("AAPL", "2023-01-01", "2024-01-01")
-            print(f"Price features shape: {price_features.shape}")
-            
-            print("SUCCESS: TSR Pipeline test successful!")
-        else:
-            print("ERROR: Failed to load data")
-            
-    except Exception as e:
-        print(f"ERROR: TSR Pipeline test failed: {e}")

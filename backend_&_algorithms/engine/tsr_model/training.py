@@ -2,36 +2,39 @@ import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader, random_split
 import numpy as np
-import matplotlib.pyplot as plt
 from typing import Dict, List, Optional
 import logging
 from pathlib import Path
 from datetime import datetime
 
-from .models import UnifiedStockPredictor, AdaptiveUnifiedPredictor
-from .data_pipelines.unified_pipeline import UnifiedDataPipeline
+from .models import TSRStockPredictor, AdaptiveTSRPredictor
+from .data_pipelines.tsr_pipeline import TSRDataPipeline
 
 # Simple visualization function
 def plot_training_loss(train_losses, val_losses=None):
     """Plot training and validation losses."""
-    plt.figure(figsize=(10, 6))
-    plt.plot(train_losses, label='Training Loss')
-    if val_losses is not None:
-        plt.plot(val_losses, label='Validation Loss')
-    plt.title('Training History')
-    plt.xlabel('Epoch')
-    plt.ylabel('Loss')
-    plt.legend()
-    plt.grid(True)
-    plt.show()
+    try:
+        import matplotlib.pyplot as plt
+        plt.figure(figsize=(10, 6))
+        plt.plot(train_losses, label='Training Loss')
+        if val_losses is not None:
+            plt.plot(val_losses, label='Validation Loss')
+        plt.title('Training History')
+        plt.xlabel('Epoch')
+        plt.ylabel('Loss')
+        plt.legend()
+        plt.grid(True)
+        plt.show()
+    except ImportError:
+        logger.warning("matplotlib not available, skipping plot")
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-class UnifiedTrainer:
+class TSRTrainer:
     """
-    Trainer for the unified stock prediction model combining price and financial data.
+    Trainer for the TSR (Technical Stock Return) prediction model.
     """
     
     def __init__(self, model: nn.Module, device: str = "auto"):
@@ -39,7 +42,7 @@ class UnifiedTrainer:
         Initialize the trainer.
         
         Args:
-            model: The unified model to train
+            model: The TSR model to train
             device: Device to use ('cpu', 'cuda', or 'auto')
         """
         self.model = model
@@ -115,12 +118,12 @@ class UnifiedTrainer:
     
     def train(self, dataset, epochs: int = 50, batch_size: int = 32, 
               learning_rate: float = 1e-3, validation_split: float = 0.2,
-              save_best: bool = True, save_path: str = "unified_model.pth") -> Dict:
+              save_best: bool = True, save_path: str = "tsr_model.pth") -> Dict:
         """
-        Train the unified model.
+        Train the TSR model.
         
         Args:
-            dataset: PyTorch dataset with combined price and financial features
+            dataset: PyTorch dataset with price features
             epochs: Number of training epochs
             batch_size: Batch size
             learning_rate: Learning rate
@@ -207,7 +210,6 @@ class UnifiedTrainer:
             'model_class': self.model.__class__.__name__,
             'model_config': {
                 'price_features': getattr(self.model, 'price_features', 4),
-                'financial_features': getattr(self.model, 'financial_features', 13),
                 'hidden_dim': getattr(self.model, 'hidden_dim', 128),
                 'use_attention': getattr(self.model, 'use_attention', True)
             },
@@ -280,10 +282,10 @@ class UnifiedTrainer:
         }
 
 
-def train_unified_model(tickers: List[str], start_date: str, end_date: str, 
-                       model_type: str = "standard", interval: str = "2h", **kwargs) -> UnifiedTrainer:
+def train_tsr_model(tickers: List[str], start_date: str, end_date: str, 
+                       model_type: str = "standard", interval: str = "2h", **kwargs) -> TSRTrainer:
     """
-    Main function to train a unified stock prediction model.
+    Main function to train a TSR stock prediction model.
     
     Args:
         tickers: List of stock symbols to train on
@@ -296,11 +298,11 @@ def train_unified_model(tickers: List[str], start_date: str, end_date: str,
         Trained model instance
     """
     # Create data pipeline
-    pipeline = UnifiedDataPipeline()
+    pipeline = TSRDataPipeline()
     
     # Create dataset
-    logger.info("Creating unified dataset...")
-    dataset = pipeline.create_unified_dataset(
+    logger.info("Creating TSR dataset...")
+    dataset = pipeline.create_tsr_dataset(
         tickers=tickers,
         start_date=start_date,
         end_date=end_date,
@@ -311,32 +313,28 @@ def train_unified_model(tickers: List[str], start_date: str, end_date: str,
     
     # Get sample to determine feature dimensions
     X_sample, _ = dataset[0]
-    total_features = X_sample.shape[1]  # Features per timestep
-    price_features = 4  # Close, SMA_14, RSI_14, MACD
-    financial_features = total_features - price_features
+    price_features = X_sample.shape[1]  # Should be 4: Close, SMA_14, RSI_14, MACD
     
-    logger.info(f"Total features: {total_features} (Price: {price_features}, Financial: {financial_features})")
+    logger.info(f"Price features: {price_features} (Close, SMA_14, RSI_14, MACD)")
     
     # Create model
     if model_type == "adaptive":
-        model = AdaptiveUnifiedPredictor(
+        model = AdaptiveTSRPredictor(
             price_features=price_features,
-            financial_features=financial_features,
             hidden_dim=kwargs.get('hidden_dim', 128),
             num_layers=kwargs.get('num_layers', 3),
             use_attention=kwargs.get('use_attention', True)
         )
     else:
-        model = UnifiedStockPredictor(
+        model = TSRStockPredictor(
             price_features=price_features,
-            financial_features=financial_features,
             hidden_dim=kwargs.get('hidden_dim', 128),
             num_layers=kwargs.get('num_layers', 3),
             use_attention=kwargs.get('use_attention', True)
         )
     
     # Create trainer
-    trainer = UnifiedTrainer(model)
+    trainer = TSRTrainer(model)
     
     # Train model
     history = trainer.train(
@@ -345,7 +343,7 @@ def train_unified_model(tickers: List[str], start_date: str, end_date: str,
         batch_size=kwargs.get('batch_size', 32),
         learning_rate=kwargs.get('learning_rate', 1e-3),
         validation_split=kwargs.get('validation_split', 0.2),
-        save_path=f"models/unified_{model_type}_model.pth"
+        save_path=f"models/tsr_{model_type}_model.pth"
     )
     
     # Plot training history
@@ -355,40 +353,3 @@ def train_unified_model(tickers: List[str], start_date: str, end_date: str,
     return trainer
 
 
-if __name__ == "__main__":
-    # Example training run
-    logger.info("=== Unified Stock Predictor Training ===")
-    
-    # Training parameters
-    tickers = ["AAPL", "MSFT", "GOOGL"]
-    start_date = "2020-01-01"
-    end_date = "2024-01-01"
-    
-    try:
-        # Train standard model
-        trainer = train_unified_model(
-            tickers=tickers,
-            start_date=start_date,
-            end_date=end_date,
-            model_type="standard",
-            epochs=30,
-            batch_size=32,
-            learning_rate=1e-3,
-            seq_length=60,
-            hidden_dim=128,
-            use_attention=True,
-            plot_loss=True
-        )
-        
-        logger.info("Training completed successfully!")
-        
-        # Show final metrics
-        final_train_loss = trainer.training_history['train_loss'][-1]
-        final_val_loss = trainer.training_history['val_loss'][-1]
-        
-        logger.info(f"Final Training Loss: {final_train_loss:.6f}")
-        logger.info(f"Final Validation Loss: {final_val_loss:.6f}")
-        
-    except Exception as e:
-        logger.error(f"Training failed: {e}")
-        raise

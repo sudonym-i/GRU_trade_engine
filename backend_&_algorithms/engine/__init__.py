@@ -1,7 +1,7 @@
 """
 Neural Trade Engine
 
-Main package for stock prediction using unified technical and fundamental analysis
+Main package for stock prediction using TSR (Technical Stock Return) analysis
 with sentiment analysis integration.
 
 Available functions:
@@ -9,8 +9,8 @@ Available functions:
     - pull_from_web: Extract content from web sources
     - analyze_sentiment: Analyze sentiment of text data
     
-    # Stock Prediction (from unified_model)  
-    - train_model: Train the unified prediction model
+    # Stock Prediction (from tsr_model)  
+    - train_model: Train the TSR prediction model
     - predict_price: Predict next stock price
     
 Example usage:
@@ -20,7 +20,7 @@ Example usage:
     trainer = train_model(["AAPL", "MSFT"], "2020-01-01", "2024-01-01")
     
     # Make prediction
-    prediction = predict_price("AAPL", model_path="models/unified_model.pth")
+    prediction = predict_price("AAPL", model_path="models/tsr_model.pth")
     
     # Analyze sentiment
     sentiment = analyze_sentiment("Stock market looks bullish today")
@@ -102,23 +102,23 @@ except ImportError:
                 return {"sentiment": "neutral", "confidence": 0.2}
         raise ImportError("Sentiment model not available. Check sentiment_model installation.")
 
-# Import unified model functions
+# Import TSR model functions
 try:
-    from .unified_model import train_model, predict_price, get_model_info, list_available_models
+    from .tsr_model import train_model, predict_price, get_model_info, list_available_models
 except ImportError as e:
     # Fallback with detailed error message
     error_msg = str(e)  # Capture error message as string
     def train_model(*args, **kwargs):
-        raise ImportError(f"Unified model functions not available: {error_msg}")
+        raise ImportError(f"TSR model functions not available: {error_msg}")
     
     def predict_price(*args, **kwargs):
-        raise ImportError(f"Unified model functions not available: {error_msg}")
+        raise ImportError(f"TSR model functions not available: {error_msg}")
     
     def get_model_info(*args, **kwargs):
-        raise ImportError(f"Unified model functions not available: {error_msg}")
+        raise ImportError(f"TSR model functions not available: {error_msg}")
     
     def list_available_models(*args, **kwargs):
-        raise ImportError(f"Unified model functions not available: {error_msg}")
+        raise ImportError(f"TSR model functions not available: {error_msg}")
 
 
 __all__ = [

@@ -3,11 +3,12 @@
 Neural Trade Engine - Main Application
 
 Example usage of the neural trade engine package combining web scraping
-and unified stock prediction models.
+and TSR (Technical Stock Return) prediction models.
 
 Usage:
     python main.py --help
-    python main.py train --tickers AAPL MSFT --days 730
+    python main.py train --ticker AAPL --days 730
+    python main.py train --tickers AAPL MSFT GOOGL --days 730
     python main.py predict --ticker AAPL --model models/latest_model.pth
     python main.py webscrape --ticker AAPL
     python main.py paper-trade --balance 50000
@@ -85,30 +86,36 @@ class Colors:
 
 
 def cmd_train(args):
-    """Train a unified stock prediction model."""
+    """Train a TSR stock prediction model."""
     # Set logging levels to show only training progress
     import logging
-    logging.getLogger('engine.unified_model.api').setLevel(logging.ERROR)
-    logging.getLogger('engine.unified_model.data_pipelines').setLevel(logging.ERROR)
-    logging.getLogger('engine.unified_model.train').setLevel(logging.INFO)
+    logging.getLogger('engine.tsr_model.api').setLevel(logging.ERROR)
+    logging.getLogger('engine.tsr_model.data_pipelines').setLevel(logging.ERROR)
+    logging.getLogger('engine.tsr_model.train').setLevel(logging.INFO)
+    
+    # Handle single ticker vs multiple tickers
+    if args.ticker:
+        tickers = [args.ticker.upper()]
+    else:
+        tickers = [t.upper() for t in args.tickers]
     
     # Calculate date range
     end_date = datetime.now().strftime('%Y-%m-%d')
     start_date = (datetime.now() - timedelta(days=args.days)).strftime('%Y-%m-%d')
     
-    print(Colors.bold(Colors.cyan("Training Neural Trade Engine")))
-    print("─" * 40)
-    print(f"{Colors.blue('Tickers:')}     {', '.join(args.tickers)}")
-    print(f"{Colors.blue('Data Range:')}  {start_date} to {end_date} ({args.days} days)")
-    print(f"{Colors.blue('Model:')}      {args.model_type.title()}")
-    print(f"{Colors.blue('Epochs:')}     {args.epochs}")
-    print(f"{Colors.blue('Batch Size:')}  {args.batch_size}")
-    print(f"{Colors.blue('Learning:')}    {args.learning_rate}")
+    print(Colors.bold(Colors.cyan("Training Neural Trade Engine (TSR Model)")))
+    print("─" * 50)
+    print(f"{Colors.blue('Ticker(s):')}    {', '.join(tickers)}")
+    print(f"{Colors.blue('Data Range:')}   {start_date} to {end_date} ({args.days} days)")
+    print(f"{Colors.blue('Model Type:')}   {args.model_type.title()}")
+    print(f"{Colors.blue('Epochs:')}       {args.epochs}")
+    print(f"{Colors.blue('Batch Size:')}   {args.batch_size}")
+    print(f"{Colors.blue('Learning Rate:')} {args.learning_rate}")
     print()
     
     try:
         model_path = train_model(
-            tickers=args.tickers,
+            tickers=tickers,
             start_date=start_date,
             end_date=end_date,
             model_type=args.model_type,
@@ -335,8 +342,11 @@ def main():
     
     # Train command
     train_parser = subparsers.add_parser('train', help='Train a prediction model')
-    train_parser.add_argument('--tickers', nargs='+', default=['AAPL'], 
-                             help='Stock tickers to train on')
+    ticker_group = train_parser.add_mutually_exclusive_group(required=True)
+    ticker_group.add_argument('--ticker', type=str,
+                             help='Single stock ticker to train on (e.g., AAPL)')
+    ticker_group.add_argument('--tickers', nargs='+',
+                             help='Multiple stock tickers to train on (e.g., AAPL MSFT GOOGL)')
     train_parser.add_argument('--days', type=int, default=730,
                              help='Days of historical data (default: 730)')
     train_parser.add_argument('--model-type', choices=['standard', 'adaptive'], 
