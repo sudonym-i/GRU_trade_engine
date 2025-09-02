@@ -63,7 +63,9 @@ tqdm>=4.64.0                     # Progress bars
 # Optional: Web Dashboard (if implementing)
 # ============================================================================
 # streamlit>=1.22.0              # Web app framework (uncomment if using dashboard)
-# flask>=2.2.0                   # Web framework (alternative to streamlit)
+flask>=2.2.0                    # Web framework (alternative to streamlit)
+flask-cors>=4.0.0               # CORS support for Flask API
+apscheduler>=3.10.0             # Background job scheduling
 # dash>=2.10.0                   # Plotly Dash for dashboards
 
 # Optional: Advanced ML Features
