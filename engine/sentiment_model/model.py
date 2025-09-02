@@ -406,7 +406,7 @@ class SentimentTrainer:
         if not load_path.exists():
             raise FileNotFoundError(f"Model file not found: {load_path}")
         
-        checkpoint = torch.load(load_path, map_location=self.device)
+        checkpoint = torch.load(load_path, map_location=self.device, weights_only=False)
         self.model.load_state_dict(checkpoint['model_state_dict'])
         self.training_history = checkpoint.get('training_history', {})
         
@@ -446,10 +446,25 @@ class SentimentPredictor:
     
     def load_model(self, model_path: str) -> None:
         """Load the trained model weights."""
-        checkpoint = torch.load(model_path, map_location=self.device)
-        self.model.load_state_dict(checkpoint['model_state_dict'])
-        self.model.eval()
-        logger.info(f"Model weights loaded from {model_path}")
+        try:
+            # First try to load as weights-only (state_dict directly)
+            state_dict = torch.load(model_path, map_location=self.device, weights_only=True)
+            self.model.load_state_dict(state_dict)
+            self.model.eval()
+            logger.info(f"Model weights loaded from {model_path} (weights-only)")
+        except Exception as e1:
+            try:
+                # Try loading as checkpoint with model_state_dict
+                checkpoint = torch.load(model_path, map_location=self.device, weights_only=False)
+                if isinstance(checkpoint, dict) and 'model_state_dict' in checkpoint:
+                    self.model.load_state_dict(checkpoint['model_state_dict'])
+                else:
+                    self.model.load_state_dict(checkpoint)
+                self.model.eval()
+                logger.info(f"Model weights loaded from {model_path} (checkpoint)")
+            except Exception as e2:
+                logger.error(f"Failed to load model: {e1}, {e2}")
+                raise e2
     
     def predict_text(self, text: str) -> Dict[str, Union[str, float, List[float]]]:
         """

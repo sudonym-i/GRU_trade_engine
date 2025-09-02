@@ -32,9 +32,9 @@ Usage:
 from .api import train_model, predict_price, get_model_info, list_available_models
 
 # Internal components (for advanced usage)
-from .data_pipelines.integrated_data_pipeline import UnifiedDataPipeline
-from .integrated_model import UnifiedStockPredictor, AdaptiveUnifiedPredictor  
-from .train import UnifiedTrainer, train_unified_model
+from .data_pipelines.unified_pipeline import UnifiedDataPipeline
+from .models import UnifiedStockPredictor, AdaptiveUnifiedPredictor  
+from .training import UnifiedTrainer, train_unified_model
 
 __all__ = [
     # Main API

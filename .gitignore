@@ -7,6 +7,14 @@
 
 .claude
 
+CLAUDE.md
+
+processed_data/
+large_downloaded_data/
+saved_models/
+processed_data/
+models/
+
 # Python
 # ============================================================================
 # Byte-compiled / optimized / DLL files

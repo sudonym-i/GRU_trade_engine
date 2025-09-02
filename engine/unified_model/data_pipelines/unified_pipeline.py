@@ -7,8 +7,8 @@ from typing import Dict, List, Tuple, Optional
 import logging
 
 # Import local pipeline components
-from .stock_pipeline import TSRDataLoader, add_technical_indicators, create_sequences
-from .financial_pipeline import FinancialDataFetcher
+from .price_data import TSRDataLoader, add_technical_indicators, create_sequences
+from .financial_data import YahooFinancialFetcher as FinancialDataFetcher
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -25,13 +25,10 @@ class UnifiedDataPipeline:
         Initialize the unified data pipeline.
         
         Args:
-            api_key: FMP API key for financial data
+            api_key: Not used for Yahoo Finance (free), kept for compatibility
         """
-        self.api_key = api_key or os.getenv('FMP_API_KEY')
-        if not self.api_key:
-            raise ValueError("API key required. Set FMP_API_KEY environment variable or pass api_key parameter.")
-        
-        self.financial_fetcher = FinancialDataFetcher(api_key=self.api_key)
+        # Yahoo Finance doesn't need API key
+        self.financial_fetcher = FinancialDataFetcher()
         
     def _align_financial_with_price_data(self, price_data: pd.DataFrame, 
                                        financial_data: pd.DataFrame, 
@@ -60,6 +57,12 @@ class UnifiedDataPipeline:
         
         financial_data = financial_data.copy()
         financial_data['date'] = pd.to_datetime(financial_data['date'])
+        # Ensure timezone compatibility
+        if price_data.index.tz is not None:
+            if financial_data['date'].dt.tz is None:
+                financial_data['date'] = financial_data['date'].dt.tz_localize(price_data.index.tz)
+            else:
+                financial_data['date'] = financial_data['date'].dt.tz_convert(price_data.index.tz)
         financial_data = financial_data.set_index('date').sort_index()
         
         # Remove non-numeric columns for alignment
@@ -69,21 +72,23 @@ class UnifiedDataPipeline:
         price_start = price_data.index.min()
         price_end = price_data.index.max()
         
-        # Filter financial data to relevant date range
-        financial_in_range = financial_features[
-            (financial_features.index >= price_start - pd.Timedelta(days=365)) &
-            (financial_features.index <= price_end)
-        ]
+        # Since financial data is static for the whole period, use it as is
+        financial_in_range = financial_features
         
         if financial_in_range.empty:
             logger.warning(f"No financial data in price data date range for {symbol}")
             return None
         
-        # Reindex to price data dates and forward fill
-        aligned_financial = financial_in_range.reindex(
-            price_data.index, 
-            method='ffill'
-        ).fillna(method='bfill')
+        # Broadcast financial features to all price data dates
+        # Create a DataFrame with the same financial data for each date
+        aligned_financial = pd.DataFrame(
+            index=price_data.index,
+            columns=financial_in_range.columns
+        )
+        
+        # Fill all rows with the same financial data
+        for col in financial_in_range.columns:
+            aligned_financial[col] = financial_in_range.iloc[0][col]
         
         # If still missing, fill with median values
         aligned_financial = aligned_financial.fillna(aligned_financial.median())
@@ -121,7 +126,7 @@ class UnifiedDataPipeline:
         return combined_features
     
     def create_unified_dataset(self, tickers: List[str], start_date: str, end_date: str,
-                             seq_length: int = 60, interval: str = "1d", 
+                             seq_length: int = 60, interval: str = "2h", 
                              normalize: bool = True, financial_periods: int = 20) -> TensorDataset:
         """
         Create unified dataset combining price sequences with financial fundamentals.
@@ -131,7 +136,7 @@ class UnifiedDataPipeline:
             start_date: Start date for price data (YYYY-MM-DD)
             end_date: End date for price data (YYYY-MM-DD) 
             seq_length: Length of price sequences
-            interval: Price data interval ('1d', '1h', etc.)
+            interval: Price data interval ('2h', '1h', '1d', etc.)
             normalize: Whether to normalize features
             financial_periods: Number of quarterly periods for financial data
             
@@ -157,14 +162,18 @@ class UnifiedDataPipeline:
                 logger.info(f"Price data shape for {ticker}: {price_data.shape}")
                 
                 # 2. Get financial data  
-                financial_data = self.financial_fetcher.get_historical_features(
-                    ticker, periods=financial_periods, period_type="quarter", normalize=False
+                financial_features = self.financial_fetcher.get_comprehensive_features(
+                    ticker, quarterly=True
                 )
                 
-                if financial_data.empty:
+                if not financial_features:
                     logger.warning(f"No financial data for {ticker}, using price data only")
                     financial_data = None
                 else:
+                    # Convert dict to DataFrame with single row and add dummy date
+                    financial_data = pd.DataFrame([financial_features])
+                    # Use the end date of price data as the financial data date
+                    financial_data['date'] = price_data.index[-1]  # Most recent price date
                     logger.info(f"Financial data shape for {ticker}: {financial_data.shape}")
                 
                 # 3. Align financial data with price data
@@ -229,12 +238,12 @@ class UnifiedDataPipeline:
             raise ValueError(f"No price data available for {ticker}")
         price_data = add_technical_indicators(price_data)
         
-        financial_data = self.financial_fetcher.get_historical_features(
-            ticker, periods=4, period_type="quarter", normalize=False
+        financial_features_dict = self.financial_fetcher.get_comprehensive_features(
+            ticker, quarterly=True
         )
         
         price_features = ['Close', 'SMA_14', 'RSI_14', 'MACD']
-        financial_features = list(financial_data.columns) if not financial_data.empty else []
+        financial_features = list(financial_features_dict.keys()) if financial_features_dict else []
         
         return {
             'ticker': ticker,
@@ -242,7 +251,7 @@ class UnifiedDataPipeline:
             'financial_features': financial_features,
             'total_features': len(price_features) + len(financial_features),
             'price_data_range': (price_data.index.min(), price_data.index.max()),
-            'financial_data_periods': len(financial_data) if not financial_data.empty else 0
+            'financial_data_periods': 1 if financial_features_dict else 0
         }
 
 

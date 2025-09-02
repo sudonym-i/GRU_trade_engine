@@ -8,8 +8,8 @@ import logging
 from pathlib import Path
 from datetime import datetime
 
-from .integrated_model import UnifiedStockPredictor, AdaptiveUnifiedPredictor
-from .data_pipelines.integrated_data_pipeline import UnifiedDataPipeline
+from .models import UnifiedStockPredictor, AdaptiveUnifiedPredictor
+from .data_pipelines.unified_pipeline import UnifiedDataPipeline
 
 # Simple visualization function
 def plot_training_loss(train_losses, val_losses=None):
@@ -281,7 +281,7 @@ class UnifiedTrainer:
 
 
 def train_unified_model(tickers: List[str], start_date: str, end_date: str, 
-                       model_type: str = "standard", **kwargs) -> UnifiedTrainer:
+                       model_type: str = "standard", interval: str = "2h", **kwargs) -> UnifiedTrainer:
     """
     Main function to train a unified stock prediction model.
     
@@ -305,6 +305,7 @@ def train_unified_model(tickers: List[str], start_date: str, end_date: str,
         start_date=start_date,
         end_date=end_date,
         seq_length=kwargs.get('seq_length', 60),
+        interval=interval,
         normalize=kwargs.get('normalize', True)
     )
     

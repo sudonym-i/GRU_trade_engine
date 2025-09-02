@@ -5,14 +5,15 @@ This module contains lightweight data pipelines for fetching and processing
 different types of financial data used by the unified model.
 
 Components:
-- stock_pipeline: Historical price and technical indicator data
-- financial_pipeline: Fundamental financial metrics and ratios
-- integrated_data_pipeline: Unified pipeline combining both data sources
+- price_data: Historical price and technical indicator data (via Yahoo Finance)
+- financial_data: Fundamental financial metrics and ratios (via Yahoo Finance)
+- stock_data_sources: Alternative stock data source implementations
+- unified_pipeline: Main pipeline combining both price and financial data
 """
 
-from .stock_pipeline import TSRDataLoader, add_technical_indicators, create_sequences, get_price_features
-from .financial_pipeline import FinancialDataFetcher, get_financial_features
-from .integrated_data_pipeline import UnifiedDataPipeline
+from .price_data import TSRDataLoader, add_technical_indicators, create_sequences, get_price_features
+from .financial_data import YahooFinancialFetcher as FinancialDataFetcher, get_financial_features
+from .unified_pipeline import UnifiedDataPipeline
 
 __all__ = [
     'TSRDataLoader',

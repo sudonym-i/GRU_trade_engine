@@ -41,10 +41,8 @@ class TSRDataLoader:
         self.start_date = start_date
         self.end_date = end_date
         self.interval = interval
-        self.api_key = api_key or os.getenv('FMP_API_KEY')
-        
-        if not self.api_key:
-            raise ValueError("API key required. Set FMP_API_KEY environment variable.")
+        # Yahoo Finance doesn't need an API key
+        self.api_key = api_key  # Keep for compatibility but not required
     
     def _get_interval_mapping(self, interval: str) -> str:
         """Map interval to FMP API format."""
@@ -59,70 +57,20 @@ class TSRDataLoader:
     
     def fetch_data(self) -> Optional[pd.DataFrame]:
         """
-        Fetch stock price data from FMP API.
+        Fetch stock price data using alternative sources.
         
         Returns:
             DataFrame with OHLCV data indexed by date
         """
         try:
-            fmp_interval = self._get_interval_mapping(self.interval)
+            # Use the smart fetcher
+            from .stock_data_sources import get_stock_data_smart
             
-            if fmp_interval == 'daily':
-                # Daily data endpoint
-                url = f"https://financialmodelingprep.com/api/v3/historical-price-full/{self.ticker}"
-                params = {
-                    'from': self.start_date,
-                    'to': self.end_date,
-                    'apikey': self.api_key
-                }
-            else:
-                # Intraday data endpoint
-                url = f"https://financialmodelingprep.com/api/v3/historical-chart/{fmp_interval}/{self.ticker}"
-                params = {
-                    'from': self.start_date,
-                    'to': self.end_date,
-                    'apikey': self.api_key
-                }
+            df = get_stock_data_smart(self.ticker, self.start_date, self.end_date, self.interval)
             
-            response = requests.get(url, params=params)
-            response.raise_for_status()
-            data = response.json()
-            
-            # Extract historical data
-            if fmp_interval == 'daily':
-                historical_data = data.get('historical', [])
-            else:
-                historical_data = data
-            
-            if not historical_data:
+            if df is None or df.empty:
                 logger.warning(f"No data found for {self.ticker}")
                 return None
-            
-            # Convert to DataFrame
-            df_data = []
-            for item in historical_data:
-                row = {
-                    'Open': item.get('open'),
-                    'High': item.get('high'),
-                    'Low': item.get('low'),
-                    'Close': item.get('close'),
-                    'Volume': item.get('volume', 0)
-                }
-                date_str = item.get('date')
-                if date_str:
-                    df_data.append((date_str, row))
-            
-            if not df_data:
-                return None
-            
-            # Create DataFrame with date index
-            dates, rows = zip(*df_data)
-            df = pd.DataFrame(rows, index=pd.to_datetime(dates))
-            df.index.name = 'Date'
-            df = df.sort_index()  # Sort by date (oldest first)
-            
-            # Remove any rows with missing data
-            df = df.dropna()
             
             logger.info(f"Fetched {len(df)} records for {self.ticker}")
             return df

@@ -28,8 +28,7 @@ try:
         get_model_info, 
         list_available_models,
         analyze_sentiment,
-        pull_from_web,
-        create_trading_engine
+        pull_from_web
     )
 except ImportError as e:
     print(f"❌ Failed to import engine functions: {e}")
@@ -200,9 +199,28 @@ def cmd_predict(args):
             include_confidence=args.confidence
         )
         
+        # Calculate price change
+        current = result['current_price']
+        predicted = result['predicted_price']
+        change = predicted - current
+        change_pct = (change / current) * 100
+        
+        # Color code the change
+        if change > 0:
+            change_color = Colors.green
+            change_symbol = "↗"
+        elif change < 0:
+            change_color = Colors.red
+            change_symbol = "↘"
+        else:
+            change_color = Colors.yellow
+            change_symbol = "→"
+        
         print(f"\n{Colors.bold(Colors.blue(result['ticker'] + ' Price Prediction'))}")
         print("─" * 50)
-        print(f"{Colors.green('Predicted Price:')}  ${result['predicted_price']:.2f}")
+        print(f"{Colors.cyan('Current Price:')}    ${current:.2f}")
+        print(f"{Colors.green('Predicted Price:')}  ${predicted:.2f}")
+        print(f"{change_color('Expected Change:')}   {change_symbol} ${change:+.2f} ({change_pct:+.1f}%)")
         
         if args.confidence and 'confidence_interval' in result:
             ci_low, ci_high = result['confidence_interval']
@@ -210,18 +228,7 @@ def cmd_predict(args):
             print(f"{Colors.magenta('Uncertainty:')}      {result['uncertainty']:.1%}")
         
         print(f"{Colors.blue('Prediction Date:')}  {result['prediction_date']}")
-        print()
-        print(f"{Colors.cyan('Sentiment Analysis:')}")
-        print(f"  {Colors.green('Overall Sentiment:')} {overall_sentiment.title()}")
-        print(f"  {Colors.green('Confidence:')} {sentiment_confidence:.1%}")
-        
-        # Provide sentiment-based guidance
-        if overall_sentiment == 'positive' and sentiment_confidence > 0.6:
-            print(f"{Colors.green('📈 Sentiment suggests bullish market mood')}")
-        elif overall_sentiment == 'negative' and sentiment_confidence > 0.6:
-            print(f"{Colors.red('📉 Sentiment suggests bearish market mood')}")
-        else:
-            print(f"{Colors.yellow('📊 Mixed or neutral sentiment detected')}")
+
         
     except Exception as e:
         print(Colors.red(f"ERROR: Prediction failed: {e}"))
@@ -392,12 +399,9 @@ def main():
         parser.print_help()
         return 0
     
-    # Check for API key
-    if args.command in ['train', 'predict', 'paper-trade', 'simulate'] and not os.getenv('FMP_API_KEY'):
-        print(Colors.red("ERROR: FMP_API_KEY environment variable not set!"))
-        print("Please set your Financial Modeling Prep API key:")
-        print(Colors.dim("export FMP_API_KEY=your_api_key_here"))
-        return 1
+    # Using free data sources - no API key needed!
+    if args.command in ['train', 'predict']:
+        print(Colors.dim("Note: Using free Yahoo Finance data - no API key required"))
     
     # Execute command
     if args.command == 'train':

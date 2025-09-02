@@ -120,36 +120,6 @@ except ImportError as e:
     def list_available_models(*args, **kwargs):
         raise ImportError(f"Unified model functions not available: {error_msg}")
 
-# Import paper trading functions
-try:
-    from .trading_simulation import PaperTradingEngine, Portfolio, BuyAndHoldStrategy, MomentumStrategy
-    
-    def create_trading_engine(*args, **kwargs):
-        """Create a paper trading engine."""
-        return PaperTradingEngine(*args, **kwargs)
-        
-except ImportError as e:
-    # Fallback for paper trading
-    error_msg = str(e)  # Capture error message as string
-    def create_trading_engine(*args, **kwargs):
-        raise ImportError(f"Paper trading functions not available: {error_msg}")
-    
-    # Create dummy classes
-    class PaperTradingEngine:
-        def __init__(self, *args, **kwargs):
-            raise ImportError(f"Paper trading not available: {error_msg}")
-    
-    class Portfolio:
-        def __init__(self, *args, **kwargs):
-            raise ImportError(f"Paper trading not available: {error_msg}")
-    
-    class BuyAndHoldStrategy:
-        def __init__(self, *args, **kwargs):
-            raise ImportError(f"Paper trading not available: {error_msg}")
-    
-    class MomentumStrategy:
-        def __init__(self, *args, **kwargs):
-            raise ImportError(f"Paper trading not available: {error_msg}")
 
 __all__ = [
     # Sentiment Analysis
@@ -160,12 +130,5 @@ __all__ = [
     'train_model', 
     'predict_price',
     'get_model_info',
-    'list_available_models',
-    
-    # Paper Trading
-    'create_trading_engine',
-    'PaperTradingEngine',
-    'Portfolio',
-    'BuyAndHoldStrategy',
-    'MomentumStrategy'
+    'list_available_models'
 ]

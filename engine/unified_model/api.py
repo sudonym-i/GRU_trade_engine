@@ -12,11 +12,11 @@ from pathlib import Path
 from typing import List, Optional, Dict, Any
 from datetime import datetime, timedelta
 
-from .train import train_unified_model, UnifiedTrainer
-from .integrated_model import UnifiedStockPredictor, AdaptiveUnifiedPredictor
-from .data_pipelines.integrated_data_pipeline import UnifiedDataPipeline
-from .data_pipelines.stock_pipeline import get_price_features
-from .data_pipelines.financial_pipeline import get_financial_features
+from .training import train_unified_model, UnifiedTrainer
+from .models import UnifiedStockPredictor, AdaptiveUnifiedPredictor
+from .data_pipelines.unified_pipeline import UnifiedDataPipeline
+from .data_pipelines.price_data import get_price_features
+from .data_pipelines.financial_data import get_financial_features
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 def train_model(tickers: List[str], start_date: str, end_date: str,
                 model_type: str = "standard", save_path: Optional[str] = None,
-                **kwargs) -> str:
+                interval: str = "2h", **kwargs) -> str:
     """
     Train a unified stock prediction model.
     
@@ -34,6 +34,7 @@ def train_model(tickers: List[str], start_date: str, end_date: str,
         end_date: Training data end date (YYYY-MM-DD)
         model_type: "standard" or "adaptive"
         save_path: Where to save the trained model (optional)
+        interval: Data interval ("2h", "1h", "1d", etc.)
         **kwargs: Additional training parameters
         
     Returns:
@@ -78,6 +79,7 @@ def train_model(tickers: List[str], start_date: str, end_date: str,
             end_date=end_date,
             model_type=model_type,
             save_path=save_path,
+            interval=interval,
             **default_params
         )
         
@@ -100,7 +102,8 @@ def train_model(tickers: List[str], start_date: str, end_date: str,
 
 def predict_price(ticker: str, model_path: str, 
                  prediction_date: Optional[str] = None,
-                 days_history: int = 30, 
+                 days_history: int = 30,
+                 interval: str = "2h",
                  include_confidence: bool = True) -> Dict[str, Any]:
     """
     Predict the next stock price using a trained unified model.
@@ -110,6 +113,7 @@ def predict_price(ticker: str, model_path: str,
         model_path: Path to trained model file
         prediction_date: Date to predict from (YYYY-MM-DD). If None, uses latest data.
         days_history: Number of days of historical data to use
+        interval: Data interval ("2h", "1h", "1d", etc.)
         include_confidence: Whether to include confidence intervals
         
     Returns:
@@ -166,6 +170,7 @@ def predict_price(ticker: str, model_path: str,
                 start_date=start_date,
                 end_date=end_date,
                 seq_length=model_seq_length,
+                interval=interval,
                 normalize=True
             )
         except ValueError as e:
@@ -174,8 +179,8 @@ def predict_price(ticker: str, model_path: str,
                 logger.warning(f"Not enough data for {model_seq_length}-day sequences, trying with available data")
                 
                 # Get raw data to see how much we have
-                from .data_pipelines.stock_pipeline import TSRDataLoader, add_technical_indicators
-                tsr_loader = TSRDataLoader(ticker, start_date, end_date)
+                from .data_pipelines.price_data import TSRDataLoader, add_technical_indicators
+                tsr_loader = TSRDataLoader(ticker, start_date, end_date, interval)
                 raw_data = tsr_loader.fetch_data()
                 if not raw_data.empty:
                     price_data = add_technical_indicators(raw_data)
@@ -189,6 +194,7 @@ def predict_price(ticker: str, model_path: str,
                         start_date=start_date,
                         end_date=end_date,
                         seq_length=adapted_seq_length,
+                        interval=interval,
                         normalize=True
                     )
                 else:
@@ -219,10 +225,13 @@ def predict_price(ticker: str, model_path: str,
         
         # Get the normalization parameters to denormalize the prediction
         # We need to get the raw close prices to calculate the normalization params
-        from .data_pipelines.stock_pipeline import TSRDataLoader, add_technical_indicators
-        tsr_loader = TSRDataLoader(ticker, start_date, end_date)
+        from .data_pipelines.price_data import TSRDataLoader, add_technical_indicators
+        tsr_loader = TSRDataLoader(ticker, start_date, end_date, interval)
         raw_data = tsr_loader.fetch_data()
         price_data_unnorm = add_technical_indicators(raw_data)
+        
+        # Get current price (most recent close price)
+        current_price = float(price_data_unnorm['Close'].iloc[-1])
         
         # Calculate normalization parameters for Close price (same as in training)
         close_mean = price_data_unnorm['Close'].mean()
@@ -240,6 +249,7 @@ def predict_price(ticker: str, model_path: str,
                 
                 prediction_result = {
                     'ticker': ticker,
+                    'current_price': current_price,
                     'predicted_price': predicted_price,
                     'confidence_std': float(result['std'].item()) * close_std,  # Scale std too
                     'confidence_interval': [ci_lower, ci_upper],
@@ -254,6 +264,7 @@ def predict_price(ticker: str, model_path: str,
                 
                 prediction_result = {
                     'ticker': ticker,
+                    'current_price': current_price,
                     'predicted_price': predicted_price,
                     'prediction_date': end_date,
                     'model_path': model_path
@@ -340,11 +351,8 @@ if __name__ == "__main__":
     # Example usage
     print("=== Unified Model API Demo ===")
     
-    # Check for API key
-    if not os.getenv('FMP_API_KEY'):
-        print("ERROR: FMP_API_KEY not set. Please set your API key:")
-        print("export FMP_API_KEY=your_api_key_here")
-        exit(1)
+    # Using Yahoo Finance - no API key needed
+    print("Note: Using free Yahoo Finance data - no API key required")
     
     try:
         # Demo training (uncomment to run)

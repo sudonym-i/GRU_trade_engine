@@ -189,8 +189,22 @@ def analyze_sentiment(raw_data: Optional[str] = None) -> Dict[str, Union[bool, s
         # Initialize model configuration and predictor
         model_config = ModelConfig()
         
-        # Check if trained model exists
-        model_path = Path(model_config.model_save_path) / "best_model.pt"
+        # Check if trained model exists - prioritize latest large dataset model
+        current_dir = Path(__file__).parent
+        
+        # First try the latest model with large dataset
+        model_path = current_dir / model_config.model_save_path / "final_weights_labeled.pt"
+        
+        # Fallback to best model if final not available
+        if not model_path.exists():
+            model_path = current_dir / model_config.model_save_path / "model_weights_labeled.pt"
+        
+        # Other fallback options
+        if not model_path.exists():
+            model_path = current_dir / model_config.model_save_path / "model_weights_only.pt"
+        
+        if not model_path.exists():
+            model_path = current_dir / model_config.model_save_path / "best_model.pt"
         
         if model_path.exists():
             # Use trained model for prediction

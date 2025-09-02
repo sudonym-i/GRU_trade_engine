@@ -1,13 +1,13 @@
 
+# May need to automate model downloading as well
+
 echo "Beginning setup.."
 echo ""
-read -p "Enter your FMP API key: " fmp_api_key
 read -p "Enter your new username: " username
 read -p "Enter your new password: " password
 echo ""
 echo "Creating .env file.."
 touch .env
-echo "FMP_API_KEY=${fmp_api_key}" >> .env
 echo "USERNAME=${username}" >> .env
 echo "PASSWORD=${password}" >> .env
 echo ""
