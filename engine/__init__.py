@@ -31,13 +31,10 @@ try:
     from .sentiment_model.api import pull_from_web as _pull_from_web, analyze_sentiment as _analyze_sentiment_file
     
     # Create wrapper functions that match the expected interface
-    def pull_from_web(url=None):
+    def pull_from_web(ticker: str, output_name: str) -> None:
         """Extract content from URL. If no URL provided, use the existing pull_from_web function."""
-        if url:
-            # For now, return a simple message - would need to implement URL extraction
-            return f"Content extraction from URL not implemented yet: {url}"
-        else:
-            return _pull_from_web()
+        _pull_from_web(ticker, output_name)
+        return
     
     def analyze_sentiment(text=None):
         """Analyze sentiment of provided text or use file-based analysis."""
@@ -90,11 +87,9 @@ try:
             
 except ImportError:
     # Fallback if sentiment model not available
-    def pull_from_web(url=None):
-        if url:
-            return f"Sentiment model not available. Cannot extract from URL: {url}"
-        raise ImportError("Sentiment model not available. Check sentiment_model installation.")
-    
+    def pull_from_web(ticker: str, output_name: str) -> None:
+        return
+
     def analyze_sentiment(text=None):
         if text:
             # Very basic fallback

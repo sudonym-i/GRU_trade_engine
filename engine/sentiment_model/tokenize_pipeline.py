@@ -5,8 +5,6 @@ Tokenization Pipeline for YouTube Sentiment Analysis Data
 This script processes raw YouTube transcript data scraped for NVIDIA stock sentiment analysis.
 It converts unstructured text into tokenized sequences ready for PyTorch model training.
 
-Author: ML Trading Bot Project
-Purpose: Sentiment analysis data preparation for financial trading decisions
 """
 
 import os
@@ -47,7 +45,7 @@ class TokenizationConfig:
     and ensures type safety across the pipeline.
     """
     # File paths
-    raw_data_path: str = "youtube.raw"
+    raw_data_path: str = "raw_data/youtube.raw"
     config_path: str = "../../../config.json"
     output_dir: str = "processed_data/"
     

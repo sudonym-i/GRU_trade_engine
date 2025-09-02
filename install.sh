@@ -26,13 +26,13 @@ sudo apt-get update && sudo apt upgrade
 sudo apt-get install libgtest-dev
 sudo apt-get install cmake
 sudo apt install libfmt-dev 
-sudo apt install libcurl
+sudo apt install curl
+sudo apt install libcurl4-gnutls-dev
 echo "Compiling c++"
-cd engine/social_media_sentiment/web_scraper/build
+cd engine/sentiment_model/web_scraper/build
 cmake ..
 make
-chmod +x webscrape.exe
-echo "C++ build successful"
+chmod +x webscrape.exe && echo "C++ build successful"
 echo ""
 
 cd ../../../..

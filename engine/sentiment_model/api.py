@@ -28,21 +28,8 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-def pull_from_web(search_query: str) -> Dict[str, Union[bool, str, int]]:
-    """
-    Execute the webscraper to pull data from configured web sources.
-    
-    This function navigates to the web_scraper build directory and executes
-    the compiled webscraper binary to collect fresh data based on the search query.
-    
-    Args:
-        search_query (str): The search term/query to use for web scraping
-    
-    Returns:
-        Dict: Status report containing success flag, message, and exit code
-    """
-    logger.info("Starting web scraping operation")
-    
+def pull_from_web(ticker: str, output_name: str) -> None:
+
     # Define paths relative to current module location
     current_dir = Path(__file__).parent
     webscraper_build_dir = current_dir / "web_scraper" / "build"
@@ -53,24 +40,14 @@ def pull_from_web(search_query: str) -> Dict[str, Union[bool, str, int]]:
         if not webscraper_build_dir.exists():
             error_msg = f"Webscraper build directory not found: {webscraper_build_dir}"
             logger.error(error_msg)
-            return {
-                "success": False,
-                "message": error_msg,
-                "exit_code": -1,
-                "data_collected": False
-            }
+            return 
         
         # Verify executable exists
         webscraper_path = webscraper_build_dir / webscraper_exe
         if not webscraper_path.exists():
             error_msg = f"Webscraper executable not found: {webscraper_path}"
             logger.error(error_msg)
-            return {
-                "success": False,
-                "message": error_msg,
-                "exit_code": -1,
-                "data_collected": False
-            }
+            return
         
         logger.info(f"Found webscraper at: {webscraper_path}")
         
@@ -92,10 +69,10 @@ def pull_from_web(search_query: str) -> Dict[str, Union[bool, str, int]]:
             if chmod_result.returncode != 0:
                 logger.warning(f"chmod warning: {chmod_result.stderr}")
             
-            # Execute the webscraper with search query
-            logger.info(f"Executing webscraper with query: {search_query}")
+            # Execute the webscraper with parameters: output_name and ticker
+            logger.info(f"Executing webscraper with output_name='{output_name}' and ticker='{ticker}'")
             result = subprocess.run(
-                [f"./{webscraper_exe}", search_query],
+                [f"./{webscraper_exe}", output_name, ticker],
                 capture_output=True,
                 text=True,
                 timeout=300  # 5 minute timeout
@@ -117,15 +94,7 @@ def pull_from_web(search_query: str) -> Dict[str, Union[bool, str, int]]:
             else:
                 logger.warning("No .raw files found after webscraper execution")
             
-            return {
-                "success": result.returncode == 0,
-                "message": f"Webscraper completed with exit code {result.returncode}",
-                "exit_code": result.returncode,
-                "stdout": result.stdout,
-                "stderr": result.stderr,
-                "data_collected": data_collected,
-                "output_files": [f.name for f in output_files]
-            }
+            return 
             
         finally:
             # Always restore original working directory
@@ -135,23 +104,12 @@ def pull_from_web(search_query: str) -> Dict[str, Union[bool, str, int]]:
     except subprocess.TimeoutExpired:
         error_msg = "Webscraper execution timed out after 5 minutes"
         logger.error(error_msg)
-        return {
-            "success": False,
-            "message": error_msg,
-            "exit_code": -2,
-            "data_collected": False
-        }
+        return 
         
     except Exception as e:
         error_msg = f"Unexpected error during web scraping: {str(e)}"
         logger.error(error_msg)
-        return {
-            "success": False,
-            "message": error_msg,
-            "exit_code": -3,
-            "data_collected": False,
-            "error_type": type(e).__name__
-        }
+        return 
 
 
 def analyze_sentiment(raw_data: Optional[str] = None) -> Dict[str, Union[bool, str, List[Dict], Dict]]:
@@ -171,7 +129,7 @@ def analyze_sentiment(raw_data: Optional[str] = None) -> Dict[str, Union[bool, s
     
     # Define paths
     current_dir = Path(__file__).parent
-    youtube_raw_path = current_dir / "youtube.raw"
+    youtube_raw_path = current_dir / "raw_data" /  "youtube.raw"
     
     try:
         # Use provided raw_data or read from file
@@ -337,9 +295,13 @@ def analyze_sentiment(raw_data: Optional[str] = None) -> Dict[str, Union[bool, s
         }
 
 
-def full_pipeline() -> Dict[str, Union[bool, str, Dict]]:
+def full_pipeline(ticker: str = "AAPL", output_name: str = "youtube.raw") -> Dict[str, Union[bool, str, Dict]]:
     """
     Execute the complete pipeline: web scraping followed by sentiment analysis.
+    
+    Args:
+        ticker (str): Stock ticker symbol (default: "AAPL")
+        output_name (str): Output filename (default: "youtube.raw")
     
     Returns:
         Dict: Combined results from both web scraping and sentiment analysis
@@ -347,33 +309,22 @@ def full_pipeline() -> Dict[str, Union[bool, str, Dict]]:
     logger.info("=== Starting Full Sentiment Analysis Pipeline ===")
     
     # Step 1: Pull data from web
-    scraping_result = pull_from_web()
+    pull_from_web(ticker, output_name)
     
-    if not scraping_result["success"]:
-        logger.error("Web scraping failed, aborting pipeline")
-        return {
-            "success": False,
-            "message": "Pipeline failed at web scraping step",
-            "scraping_result": scraping_result,
-            "analysis_result": None
-        }
-    
-    logger.info("Web scraping completed successfully, proceeding to sentiment analysis")
+    logger.info("Web scraping completed, proceeding to sentiment analysis")
     
     # Step 2: Analyze sentiment
     analysis_result = analyze_sentiment()
     
-    # Combine results
-    pipeline_success = scraping_result["success"] and analysis_result["success"]
-    
+    # Return analysis results
     result = {
-        "success": pipeline_success,
-        "message": "Full pipeline completed" if pipeline_success else "Pipeline completed with errors",
-        "scraping_result": scraping_result,
-        "analysis_result": analysis_result
+        "success": analysis_result["success"],
+        "message": "Full pipeline completed" if analysis_result["success"] else "Pipeline completed with errors",
+        "analysis_result": analysis_result,
+        "parameters": {"ticker": ticker, "output_name": output_name}
     }
     
-    if pipeline_success:
+    if analysis_result["success"]:
         logger.info("=== Full Pipeline Completed Successfully ===")
         if analysis_result.get("statistics"):
             stats = analysis_result["statistics"]
@@ -438,20 +389,18 @@ if __name__ == "__main__":
     
     # Test web scraping
     print("\n1. Testing web scraper...")
-    scrape_result = pull_from_web()
-    print(f"Scraping result: {scrape_result['success']}")
-    print(f"Message: {scrape_result['message']}")
+    pull_from_web("AAPL", "youtube.raw")
+    print("Web scraping completed")
     
-    if scrape_result['success']:
-        # Test sentiment analysis
-        print("\n2. Testing sentiment analysis...")
-        analysis_result = analyze_sentiment()
-        print(f"Analysis result: {analysis_result['success']}")
-        print(f"Message: {analysis_result['message']}")
-        
-        if analysis_result['success']:
-            stats = analysis_result['statistics']
-            print(f"Segments processed: {stats.get('predictions_made', 0)}")
-            print(f"Overall sentiment: {stats.get('overall_sentiment', 'unknown')}")
+    # Test sentiment analysis
+    print("\n2. Testing sentiment analysis...")
+    analysis_result = analyze_sentiment()
+    print(f"Analysis result: {analysis_result['success']}")
+    print(f"Message: {analysis_result['message']}")
+    
+    if analysis_result['success']:
+        stats = analysis_result['statistics']
+        print(f"Segments processed: {stats.get('predictions_made', 0)}")
+        print(f"Overall sentiment: {stats.get('overall_sentiment', 'unknown')}")
     
     print("\n=== Demo Complete ===")

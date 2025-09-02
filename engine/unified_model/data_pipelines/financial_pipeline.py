@@ -55,23 +55,32 @@ class FinancialDataFetcher:
             logger.warning(f"Failed to get income statement for {symbol}: {e}")
             return pd.DataFrame()
     
-    def get_key_metrics(self, symbol: str, period: str = "quarter", limit: int = 20) -> pd.DataFrame:
-        """Get historical key metrics data."""
+    def get_balance_sheet(self, symbol: str, period: str = "quarter", limit: int = 20) -> pd.DataFrame:
+        """Get historical balance sheet data."""
         try:
-            data = self._make_request(f"key-metrics/{symbol}", {'period': period, 'limit': limit})
+            data = self._make_request(f"balance-sheet-statement/{symbol}", {'period': period, 'limit': limit})
             return pd.DataFrame(data)
         except Exception as e:
-            logger.warning(f"Failed to get key metrics for {symbol}: {e}")
+            logger.warning(f"Failed to get balance sheet for {symbol}: {e}")
             return pd.DataFrame()
     
-    def get_financial_ratios(self, symbol: str, period: str = "quarter", limit: int = 20) -> pd.DataFrame:
-        """Get historical financial ratios data."""
+    def get_cash_flow(self, symbol: str, period: str = "quarter", limit: int = 20) -> pd.DataFrame:
+        """Get historical cash flow statement data."""
         try:
-            data = self._make_request(f"ratios/{symbol}", {'period': period, 'limit': limit})
+            data = self._make_request(f"cash-flow-statement/{symbol}", {'period': period, 'limit': limit})
             return pd.DataFrame(data)
         except Exception as e:
-            logger.warning(f"Failed to get financial ratios for {symbol}: {e}")
+            logger.warning(f"Failed to get cash flow for {symbol}: {e}")
             return pd.DataFrame()
+    
+    def get_company_profile(self, symbol: str) -> Dict[str, Any]:
+        """Get company profile data."""
+        try:
+            data = self._make_request(f"profile/{symbol}")
+            return data[0] if data and len(data) > 0 else {}
+        except Exception as e:
+            logger.warning(f"Failed to get company profile for {symbol}: {e}")
+            return {}
     
     def get_historical_features(self, symbol: str, periods: int = 20, period_type: str = "quarter", 
                                normalize: bool = True) -> pd.DataFrame:
@@ -89,22 +98,23 @@ class FinancialDataFetcher:
         """
         logger.info(f"Fetching {periods} {period_type} periods of financial data for {symbol}")
         
-        # Define consistent feature columns that we want
+        # Define consistent feature columns available in free tier
         feature_columns = [
             'revenue', 'net_income', 'gross_profit', 'operating_income',
-            'pe_ratio', 'roe', 'roa', 'debt_to_equity',
-            'current_ratio', 'quick_ratio', 'gross_profit_margin',
-            'market_cap', 'volume'
+            'total_assets', 'total_debt', 'stockholders_equity',
+            'operating_cash_flow', 'free_cash_flow',
+            'market_cap', 'beta', 'pe_ratio'
         ]
         
         try:
-            # Get historical financial statements
+            # Get historical financial statements (free tier)
             income_hist = self.get_income_statement(symbol, period_type, periods)
-            metrics_hist = self.get_key_metrics(symbol, period_type, periods)
-            ratios_hist = self.get_financial_ratios(symbol, period_type, periods)
+            balance_hist = self.get_balance_sheet(symbol, period_type, periods)
+            cashflow_hist = self.get_cash_flow(symbol, period_type, periods)
+            profile_data = self.get_company_profile(symbol)
             
             # Check if we have any data
-            datasets = [income_hist, metrics_hist, ratios_hist]
+            datasets = [income_hist, balance_hist, cashflow_hist]
             non_empty_datasets = [df for df in datasets if not df.empty]
             
             if not non_empty_datasets:
@@ -133,35 +143,36 @@ class FinancialDataFetcher:
                     # Get date
                     features['date'] = row.get('date')
                 
-                # From key metrics
-                if not metrics_hist.empty and i < len(metrics_hist):
-                    row = metrics_hist.iloc[i]
+                # From balance sheet
+                if not balance_hist.empty and i < len(balance_hist):
+                    row = balance_hist.iloc[i]
                     features.update({
-                        'pe_ratio': row.get('peRatio'),
-                        'roe': row.get('roe'),
-                        'roa': row.get('roa'),
-                        'debt_to_equity': row.get('debtToEquity'),
-                        'market_cap': row.get('marketCap'),
+                        'total_assets': row.get('totalAssets'),
+                        'total_debt': row.get('totalDebt'),
+                        'stockholders_equity': row.get('totalStockholdersEquity'),
                     })
                     # Use this date if we don't have one from income statement
                     if features['date'] is None:
                         features['date'] = row.get('date')
                 
-                # From financial ratios
-                if not ratios_hist.empty and i < len(ratios_hist):
-                    row = ratios_hist.iloc[i]
+                # From cash flow statement
+                if not cashflow_hist.empty and i < len(cashflow_hist):
+                    row = cashflow_hist.iloc[i]
                     features.update({
-                        'current_ratio': row.get('currentRatio'),
-                        'quick_ratio': row.get('quickRatio'),
-                        'gross_profit_margin': row.get('grossProfitMargin'),
+                        'operating_cash_flow': row.get('operatingCashFlow'),
+                        'free_cash_flow': row.get('freeCashFlow'),
                     })
                     # Use this date if we don't have one yet
                     if features['date'] is None:
                         features['date'] = row.get('date')
                 
-                # Set volume to 0 if not available (placeholder)
-                if features['volume'] is None:
-                    features['volume'] = 0
+                # Add company profile data (static)
+                if profile_data:
+                    features.update({
+                        'market_cap': profile_data.get('mktCap'),
+                        'beta': profile_data.get('beta'),
+                        'pe_ratio': profile_data.get('pe'),
+                    })
                 
                 historical_data.append(features)
             
@@ -175,7 +186,7 @@ class FinancialDataFetcher:
             
             # Handle missing values in financial features
             financial_cols = [col for col in feature_columns if col in df.columns]
-            df[financial_cols] = df[financial_cols].fillna(method='ffill').fillna(method='bfill').fillna(0)
+            df[financial_cols] = df[financial_cols].ffill().bfill().fillna(0)
             
             if normalize and len(df) > 1:
                 # Normalize financial features
@@ -210,9 +221,9 @@ class FinancialDataFetcher:
             # Return empty DataFrame with expected structure
             feature_columns = [
                 'revenue', 'net_income', 'gross_profit', 'operating_income',
-                'pe_ratio', 'roe', 'roa', 'debt_to_equity',
-                'current_ratio', 'quick_ratio', 'gross_profit_margin',
-                'market_cap', 'volume'
+                'total_assets', 'total_debt', 'stockholders_equity',
+                'operating_cash_flow', 'free_cash_flow',
+                'market_cap', 'beta', 'pe_ratio'
             ]
             return pd.DataFrame(columns=feature_columns)
         
@@ -242,13 +253,23 @@ def get_financial_features(symbol: str, periods: int = 20, period_type: str = "q
 if __name__ == "__main__":
     # Test the financial pipeline
     print("Testing Financial Pipeline...")
+    print("\nFree Tier Endpoints Available:")
+    print("- Income Statement: /api/v3/income-statement/{symbol}")
+    print("- Balance Sheet: /api/v3/balance-sheet-statement/{symbol}")
+    print("- Cash Flow: /api/v3/cash-flow-statement/{symbol}")
+    print("- Company Profile: /api/v3/profile/{symbol}")
+    print("\nFeatures extracted:")
+    print("- Revenue, Net Income, Gross Profit, Operating Income")
+    print("- Total Assets, Total Debt, Stockholders Equity")
+    print("- Operating Cash Flow, Free Cash Flow")
+    print("- Market Cap, Beta, PE Ratio")
     
     try:
         # Test with a well-known stock
         fetcher = FinancialDataFetcher()
         
         # Test historical features
-        print("Testing historical features...")
+        print("\nTesting historical features...")
         historical_data = fetcher.get_historical_features("AAPL", periods=8, period_type="quarter")
         
         if not historical_data.empty:
@@ -276,5 +297,15 @@ if __name__ == "__main__":
         
         print("\nSUCCESS: Financial Pipeline test completed!")
         
+    except ValueError as e:
+        if "API key required" in str(e):
+            print("\nTo test with real data, set the FMP_API_KEY environment variable:")
+            print("export FMP_API_KEY=your_api_key_here")
+            print("\nRefactoring completed successfully!")
+            print("- Removed premium endpoints (key-metrics, ratios)")
+            print("- Added free tier endpoints (balance-sheet, cash-flow, profile)")
+            print("- Updated feature extraction to use available data")
+        else:
+            print(f"ERROR: {e}")
     except Exception as e:
         print(f"ERROR: Financial Pipeline test failed: {e}")

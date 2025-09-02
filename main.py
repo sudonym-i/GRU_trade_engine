@@ -2,14 +2,14 @@
 """
 Neural Trade Engine - Main Application
 
-Example usage of the neural trade engine package combining sentiment analysis
+Example usage of the neural trade engine package combining web scraping
 and unified stock prediction models.
 
 Usage:
     python main.py --help
     python main.py train --tickers AAPL MSFT --days 730
     python main.py predict --ticker AAPL --model models/latest_model.pth
-    python main.py sentiment --text "Stock market looks bullish today"
+    python main.py webscrape --ticker AAPL
     python main.py paper-trade --balance 50000
     python main.py simulate --tickers AAPL MSFT --strategy momentum --days 30
 """
@@ -164,33 +164,27 @@ def cmd_predict(args):
     
     print(f"{Colors.cyan('Predicting')} {Colors.bold(args.ticker.upper())} {Colors.cyan('price using')} {Colors.magenta(model_name)}...")
     
-    # Pull sentiment data for the ticker
-    print(f"{Colors.cyan('Gathering sentiment data for')} {Colors.bold(args.ticker.upper())}...")
+    # Pull web data for sentiment analysis
+    print(f"{Colors.cyan('Gathering web data for')} {Colors.bold(args.ticker.upper())}...")
     try:
-        sentiment_result = pull_from_web(args.ticker)
-        if sentiment_result.get('success') and sentiment_result.get('data_collected'):
-            print(f"{Colors.green('✓')} Sentiment data collected successfully")
             
-            # Analyze sentiment from the scraped data
-            print(Colors.cyan("Analyzing sentiment..."))
-            sentiment_analysis = analyze_sentiment()
+        # Analyze sentiment from the scraped data
+        print(Colors.cyan("Analyzing sentiment..."))
+        sentiment_analysis = analyze_sentiment()
             
-            if sentiment_analysis.get('success'):
-                stats = sentiment_analysis.get('statistics', {})
-                overall_sentiment = stats.get('overall_sentiment', 'neutral')
-                sentiment_confidence = stats.get('sentiment_confidence', 0)
-                
-                print(f"{Colors.green('✓')} Sentiment analysis complete")
-                print(f"  {Colors.blue('Overall Sentiment:')} {overall_sentiment.title()}")
-                print(f"  {Colors.blue('Confidence:')} {sentiment_confidence:.1%}")
-            else:
-                print(f"{Colors.yellow('⚠')} Sentiment analysis failed: {sentiment_analysis.get('message', 'Unknown error')}")
-                overall_sentiment = 'neutral'
-                sentiment_confidence = 0.5
+        if sentiment_analysis.get('success'):
+            stats = sentiment_analysis.get('statistics', {})
+            overall_sentiment = stats.get('overall_sentiment', 'neutral')
+            sentiment_confidence = stats.get('sentiment_confidence', 0)
+            
+            print(f"{Colors.green('✓')} Sentiment analysis complete")
+            print(f"  {Colors.blue('Overall Sentiment:')} {overall_sentiment.title()}")
+            print(f"  {Colors.blue('Confidence:')} {sentiment_confidence:.1%}")
         else:
-            print(f"{Colors.yellow('⚠')} Could not gather sentiment data: {sentiment_result.get('message', 'Unknown error')}")
+            print(f"{Colors.yellow('⚠')} Sentiment analysis failed: {sentiment_analysis.get('message', 'Unknown error')}")
             overall_sentiment = 'neutral'
             sentiment_confidence = 0.5
+
             
     except Exception as e:
         print(f"{Colors.yellow('⚠')} Sentiment analysis error: {e}")
@@ -238,37 +232,23 @@ def cmd_predict(args):
     return 0
 
 
-def cmd_sentiment(args):
-    """Analyze sentiment of text."""
+def cmd_webscrape(args):
+    """Scrape web data for a ticker."""
     # Set logging level to reduce noise
     import logging
     logging.getLogger('engine').setLevel(logging.ERROR)
     
     try:
-        if args.url:
-            print(f"{Colors.cyan('Analyzing sentiment from:')} {args.url}")
-            content = pull_from_web(args.url)
-            text_to_analyze = content.get('content', args.url) if isinstance(content, dict) else str(content)
-        else:
-            print(Colors.cyan("Analyzing text sentiment..."))
-            text_to_analyze = args.text
         
-        result = analyze_sentiment(text_to_analyze)
+        pull_from_web(args.ticker, "youtube.raw")
         
-        print(f"\n{Colors.bold(Colors.blue('Sentiment Analysis'))}")
-        print("─" * 40)
-        print(f"{Colors.blue('Text Preview:')} {text_to_analyze[:80]}{'...' if len(text_to_analyze) > 80 else ''}")
-        
-        if isinstance(result, dict):
-            sentiment = result.get('sentiment', 'Unknown').title()
-            confidence = result.get('confidence', 0)
-            print(f"{Colors.green('Sentiment:')}   {sentiment}")
-            print(f"{Colors.yellow('Confidence:')}  {confidence:.1%}")
-        else:
-            print(f"{Colors.green('Result:')}      {result}")
+        print(f"\n{Colors.bold(Colors.blue('Web Scraping Complete'))}")
+        print(f"{Colors.green('✓')} Successfully scraped data for {Colors.bold(args.ticker.upper())}")
+        print(f"{Colors.blue('Data saved to:')} youtube.raw")
+
         
     except Exception as e:
-        print(Colors.red(f"ERROR: Sentiment analysis failed: {e}"))
+        print(Colors.red(f"ERROR: Web scraping failed: {e}"))
         return 1
     
     return 0
@@ -370,11 +350,9 @@ def main():
     predict_parser.add_argument('--confidence', action='store_true',
                                help='Include confidence intervals')
     
-    # Sentiment command
-    sentiment_parser = subparsers.add_parser('sentiment', help='Analyze text sentiment')
-    sentiment_group = sentiment_parser.add_mutually_exclusive_group(required=True)
-    sentiment_group.add_argument('--text', help='Text to analyze')
-    sentiment_group.add_argument('--url', help='URL to extract and analyze')
+    # Web scraping command
+    webscrape_parser = subparsers.add_parser('webscrape', help='Scrape web data for sentiment analysis')
+    webscrape_parser.add_argument('--ticker', required=True, help='Stock ticker to scrape data for')
     
     # List models command
     list_parser = subparsers.add_parser('models', help='List available trained models')
@@ -426,8 +404,8 @@ def main():
         return cmd_train(args)
     elif args.command == 'predict':
         return cmd_predict(args)
-    elif args.command == 'sentiment':
-        return cmd_sentiment(args)
+    elif args.command == 'webscrape':
+        return cmd_webscrape(args)
     elif args.command == 'models':
         return cmd_list_models(args)
     elif args.command == 'info':

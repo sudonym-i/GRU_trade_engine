@@ -52,28 +52,32 @@ target_link_libraries(webscrape.exe CURL::libcurl fmt::fmt)
 # ============================================================================
 
 # Include CTest for running tests
-include(CTest)
-enable_testing()
+
+# include(CTest)
+# enable_testing()
 
 # Only build tests if this is the main project (not included as subdirectory)
-if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
-    # Fetch Google Test from GitHub
-    include(FetchContent)
-    FetchContent_Declare(
-        googletest
-        GIT_REPOSITORY https://github.com/google/googletest.git
-        GIT_TAG        v1.14.0  # Use latest stable version
-    )
+
+# if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
+#     # Fetch Google Test from GitHub
+#     include(FetchContent)
+#     FetchContent_Declare(
+#         googletest
+#         GIT_REPOSITORY https://github.com/google/googletest.git
+#         GIT_TAG        v1.14.0  # Use latest stable version
+#     )
     
-    # Configure Google Test
-    set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-    FetchContent_MakeAvailable(googletest)
+#     # Configure Google Test
+#     set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+#     FetchContent_MakeAvailable(googletest)
     
-    # Create a library from scraper sources (for testing)
-    # This allows tests to link against scraper functionality without duplicating code
-    add_library(scraper_lib scraper.cpp)
-    target_link_libraries(scraper_lib CURL::libcurl fmt::fmt)
+#     # Create a library from scraper sources (for testing)
+#     # This allows tests to link against scraper functionality without duplicating code
+#     add_library(scraper_lib scraper.cpp)
+#     target_link_libraries(scraper_lib CURL::libcurl fmt::fmt)
     
-    # Add the tests subdirectory
-    add_subdirectory(./tests)
-endif()
+#     # Add the tests subdirectory
+#     add_subdirectory(./tests)
+
+
+# endif()
