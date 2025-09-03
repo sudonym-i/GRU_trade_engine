@@ -1,0 +1,15 @@
+Collecting ib-insync
+  Using cached ib_insync-0.9.86-py3-none-any.whl.metadata (5.4 kB)
+Collecting eventkit (from ib-insync)
+  Using cached eventkit-1.0.3-py3-none-any.whl.metadata (5.4 kB)
+Collecting nest-asyncio (from ib-insync)
+  Using cached nest_asyncio-1.6.0-py3-none-any.whl.metadata (2.8 kB)
+Collecting numpy (from eventkit->ib-insync)
+  Using cached numpy-2.3.2-cp313-cp313-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (62 kB)
+Using cached ib_insync-0.9.86-py3-none-any.whl (72 kB)
+Using cached eventkit-1.0.3-py3-none-any.whl (31 kB)
+Using cached nest_asyncio-1.6.0-py3-none-any.whl (5.2 kB)
+Using cached numpy-2.3.2-cp313-cp313-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (16.6 MB)
+Installing collected packages: numpy, nest-asyncio, eventkit, ib-insync
+
+Successfully installed eventkit-1.0.3 ib-insync-0.9.86 nest-asyncio-1.6.0 numpy-2.3.2
