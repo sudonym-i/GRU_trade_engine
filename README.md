@@ -1,14 +1,15 @@
 
 # Neural Trade Engine 1.0.0
 
-Status: Working
-Version: 1.0.0
-Supported OS: Linux
-Hardware Requirements: 8-9 GB of ram ( for os + Neural_Trade_Engine), a decently fast CPU, GPU not a requirement
+**Status:** Working
 
-An AI-powered algorithmic trading system that combines machine learning, sentiment analysis, and automated portfolio management with real-time predictions and trading signals.
+**Version:** 1.0.0
 
-## 🚀 Overview
+**Supported OS:** Linux
+
+**Hardware Requirements:** 8-9 GB of ram ( for OS + Neural_Trade_Engine), a decently fast CPU, GPU not a requirement
+
+## Overview
 
 The Neural Trade Engine is a comprehensive trading platform that provides:
 
@@ -83,7 +84,7 @@ neural_trade_engine/
 
 ### Prerequisites
 - Python 3.8+
-- Interactive Brokers account and Trader Workstation (The IB app) installed
+- Interactive Brokers account and Trader Workstation (The IB app) installed. <-- This is your stock-market API
 
 ### Quick Installation & Setup
 
@@ -94,7 +95,7 @@ cd neural_trade_engine
 chmod +x automated_setup.sh
 ./automated_setup.sh
 ```
-This will walk you through the entire setup, and can start the engine for you **(capable of handling everything for you)**
+This will walk you through the entire setup, installing all dependencies and training models. You can use this interface to get your engine actively running on your hardware, no extra steps neccesary.
 
 ---
 
@@ -178,13 +179,13 @@ adjusted_return = 1.8% + 7.2% = 9.0%
 #### Example Sentiment Scenarios
 ```
 Scenario 1: Strong Bullish Sentiment + Weak Prediction
-• Base Prediction: +2.0% → Sentiment Bias: +10.8% → Final: +12.8% → BUY
+• Base Prediction: +2.0% → Sentiment Bias: +0.8% → Final: +2.8% → BUY
 
 Scenario 2: Conflicting Signals (Bearish Sentiment Overrides Bullish Prediction)  
-• Base Prediction: +3.5% → Sentiment Bias: -7.2% → Final: -3.7% → SELL
+• Base Prediction: +1.5% → Sentiment Bias: -.2% → Final: 1.3% → SELL
 
 Scenario 3: Neutral Sentiment (Minimal Impact)
-• Base Prediction: +5.0% → Sentiment Bias: +0.4% → Final: +5.4% → BUY
+• Base Prediction: +5.0% → Sentiment Bias: +0.04% → Final: +5.4% → BUY
 ```
 
 ### Data Pipeline & Feature Engineering
