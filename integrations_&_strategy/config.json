@@ -6,7 +6,7 @@
   "stop_loss": -0.05,
   "take_profit": 0.10,
   "cash_reserve": 0.05,
-  "sentiment_bias_strength": 0.10,
+  "sentiment_bias_strength": 0.01,
   "trading_hours": {
     "market_close": "16:00",
     "prediction_time": "17:00",
