@@ -283,7 +283,7 @@ class TSRTrainer:
 
 
 def train_tsr_model(tickers: List[str], start_date: str, end_date: str, 
-                       model_type: str = "standard", interval: str = "2h", **kwargs) -> TSRTrainer:
+                       model_type: str = "standard", interval: str = "1 day", **kwargs) -> TSRTrainer:
     """
     Main function to train a TSR stock prediction model.
     

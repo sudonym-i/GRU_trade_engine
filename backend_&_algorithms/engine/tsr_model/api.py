@@ -22,17 +22,17 @@ logger = logging.getLogger(__name__)
 
 def train_model(tickers: List[str], start_date: str, end_date: str,
                 model_type: str = "standard", save_path: Optional[str] = None,
-                interval: str = "2h", **kwargs) -> str:
+                interval: str = "1 day", **kwargs) -> str:
     """
     Train a TSR stock prediction model.
     
     Args:
-        tickers: List of stock symbols to train on (e.g., ["AAPL", "MSFT"])
+        tickers: List with ONE stock symbol (e.g., ["NVDA"]) - SINGLE STOCK RECOMMENDED
         start_date: Training data start date (YYYY-MM-DD)
         end_date: Training data end date (YYYY-MM-DD)
         model_type: "standard" or "adaptive"
         save_path: Where to save the trained model (optional)
-        interval: Data interval ("2h", "1h", "1d", etc.)
+        interval: Data interval ("1 day", "1h", "30 mins", etc.)
         **kwargs: Additional training parameters
         
     Returns:
@@ -40,14 +40,19 @@ def train_model(tickers: List[str], start_date: str, end_date: str,
         
     Example:
         model_path = train_model(
-            tickers=["AAPL", "MSFT", "GOOGL"],
+            tickers=["NVDA"],  # Single stock for best performance
             start_date="2020-01-01",
             end_date="2024-01-01",
             epochs=50,
             batch_size=32
         )
     """
-    logger.info(f"Training {model_type} TSR model on {len(tickers)} tickers")
+    # Validate single-stock recommendation
+    if len(tickers) > 1:
+        logger.warning(f"Training {model_type} TSR model on {len(tickers)} stocks: {tickers}")
+        logger.warning("RECOMMENDATION: Train separate models for each stock for optimal performance")
+    else:
+        logger.info(f"Training {model_type} TSR model on single stock: {tickers[0]} (recommended approach)")
     logger.info(f"Training data: {start_date} to {end_date}")
     
     # Set default save path
@@ -55,7 +60,12 @@ def train_model(tickers: List[str], start_date: str, end_date: str,
         models_dir = Path("models")
         models_dir.mkdir(exist_ok=True)
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        save_path = f"models/tsr_{model_type}_model_{timestamp}.pth"
+        if len(tickers) == 1:
+            # Single stock - include ticker in filename
+            save_path = f"models/tsr_{model_type}_{tickers[0]}_{timestamp}.pth"
+        else:
+            # Multiple stocks - generic filename
+            save_path = f"models/tsr_{model_type}_model_{timestamp}.pth"
     
     # Default training parameters
     default_params = {
@@ -100,8 +110,8 @@ def train_model(tickers: List[str], start_date: str, end_date: str,
 
 def predict_price(ticker: str, model_path: str, 
                  prediction_date: Optional[str] = None,
-                 days_history: int = 30,
-                 interval: str = "2h",
+                 days_history: int = 60,
+                 interval: str = "1 day",
                  include_confidence: bool = True) -> Dict[str, Any]:
     """
     Predict the next stock price using a trained TSR model.
@@ -111,7 +121,7 @@ def predict_price(ticker: str, model_path: str,
         model_path: Path to trained model file
         prediction_date: Date to predict from (YYYY-MM-DD). If None, uses latest data.
         days_history: Number of days of historical data to use
-        interval: Data interval ("2h", "1h", "1d", etc.)
+        interval: Data interval ("1 day", "1h", "30 mins", etc.)
         include_confidence: Whether to include confidence intervals
         
     Returns:

@@ -1,55 +1,80 @@
 
 # Neural Trade Engine
 
-An advanced AI-powered stock prediction and trading system that combines technical analysis, financial fundamentals, and sentiment analysis for comprehensive market intelligence.
+An AI-powered algorithmic trading system that combines machine learning, sentiment analysis, and automated portfolio management with real-time predictions and trading signals.
 
 ## 🚀 Overview
 
-The Neural Trade Engine is a comprehensive trading platform that integrates:
+The Neural Trade Engine is a comprehensive trading platform that provides:
 
-- **🧠 Unified ML Models**: Combines price patterns with financial fundamentals
-- **📊 Trading Simulation**: Realistic paper trading with real market data
-- **😊 Sentiment Analysis**: Market sentiment from news and social media  
-- **⚡ Automated Strategies**: Multiple trading algorithms with performance tracking
-- **📈 Performance Analytics**: Detailed metrics and backtesting capabilities
+1. **Command-Line Interface**: Full-featured CLI for training models, making predictions, and running simulations
+2. **Automated Trading Integration**: Scheduled trading operations with customizable strategies
+3. **ML Model Training**: Neural networks combining technical analysis and sentiment data
+4. **Portfolio Simulation**: Paper trading and backtesting with multiple strategies
+5. **Real-time Data**: Live market data integration with sentiment analysis
+
+### Key Features
+- **🧠 ML-Powered Predictions**: Unified neural networks with technical and fundamental analysis
+- **📊 Multiple Trading Strategies**: Buy & Hold, Momentum, and ML-driven trading
+- **🤖 Automated Scheduling**: Background jobs for data collection and predictions
+- **📈 Performance Analytics**: Comprehensive metrics including Sharpe ratio and drawdown analysis
+- **😊 Sentiment Analysis**: BERT-based market sentiment from web sources
+- **💻 Interactive Trading**: Paper trading interface with real-time market data
 
 ## 📁 Project Structure
 
 ```
 neural_trade_engine/
-├── main.py                          # CLI application entry point
-├── config.json                      # Configuration settings
-├── engine/                          # Core engine package
-│   ├── __init__.py                  # Main package exports
-│   ├── unified_model/               # Unified prediction models
-│   │   ├── integrated_model.py     # Neural network architectures
-│   │   ├── train.py                 # Model training pipeline  
-│   │   ├── api.py                   # High-level API functions
-│   │   ├── models/                  # Trained model storage
-│   │   └── data_pipelines/          # Data processing pipelines
-│   │       ├── stock_pipeline.py   # Price & technical data
-│   │       ├── financial_pipeline.py # Fundamental data
-│   │       └── integrated_data_pipeline.py # Combined pipeline
-│   ├── trading_simulation/          # Trading simulation engine
-│   │   ├── engine.py               # Main trading engine
-│   │   ├── portfolio.py            # Portfolio management
-│   │   ├── orders.py               # Order execution system
-│   │   └── strategies.py           # Trading strategies
-│   ├── sentiment_model/             # Sentiment analysis
-│   │   ├── model.py                # BERT-based sentiment model
-│   │   ├── route.py                # Web scraping & analysis
-│   │   ├── processed_data/          # Tokenized training data
-│   │   ├── raw_data/                # Raw sentiment data
-│   │   └── web_scraper/             # C++ web scraping tools
-│   └── requirements.txt             # Engine dependencies
-├── frontend_&_integrations/         # Frontend and integration tools
-│   ├── dashboard/                   # Web dashboard (planned)
-│   ├── google_sheets/              # Google Sheets integration
-│   └── message_api/                # Messaging/notification API
-└── performance_data/                # Model performance logs
-    ├── INFO.md                     # Performance documentation
-    ├── generalizing_tsr_model/     # Generalized model results
-    └── specialized_tsr_model/      # Specialized model results
+├── README.md                        # Project documentation
+├── .claude/                         # Claude Code configuration
+│   ├── CLAUDE.md                    # Development plan and instructions
+│   └── settings.local.json          # Local settings
+├── backend_&_algorithms/            # Core ML and trading engine
+│   ├── main.py                      # CLI application entry point
+│   ├── config.json                  # Configuration settings
+│   ├── install.sh                   # Installation script
+│   ├── models/                      # Trained model storage
+│   ├── processed_data/              # Processed training data
+│   ├── saved_models/                # Saved model checkpoints
+│   ├── testing/                     # Test files and scripts
+│   ├── engine/                      # Core engine package
+│   │   ├── __init__.py              # Package initialization
+│   │   ├── requirements.txt         # Engine dependencies
+│   │   ├── setup.py                 # Package setup
+│   │   ├── tsr_model/               # Time Series Regression models
+│   │   │   ├── api.py               # High-level API functions
+│   │   │   ├── models.py            # Neural network architectures
+│   │   │   ├── training.py          # Model training pipeline
+│   │   │   ├── data_pipelines/      # Data processing pipelines
+│   │   │   │   ├── __init__.py      # Pipeline package
+│   │   │   │   ├── price_data.py    # Price & technical data
+│   │   │   │   ├── stock_data_sources.py # Data source utilities
+│   │   │   │   └── tsr_pipeline.py  # TSR-specific pipeline
+│   │   │   └── __init__.py          # TSR model package
+│   │   └── sentiment_model/         # Sentiment analysis
+│   │       ├── api.py               # Sentiment API functions
+│   │       ├── model.py             # BERT-based sentiment model
+│   │       ├── tokenize_pipeline.py # Text processing pipeline
+│   │       ├── train_with_labeled_data.py # Training script
+│   │       ├── download_dataset.py  # Dataset utilities
+│   │       ├── processed_data/      # Tokenized training data
+│   │       ├── saved_models/        # Trained sentiment models
+│   │       ├── web_scraper/         # C++ web scraping tools
+│   │       │   ├── CMakeLists.txt   # Build configuration
+│   │       │   ├── README.md        # Scraper documentation
+│   │       │   └── tests/           # Unit tests
+│   │       └── __init__.py          # Sentiment model package
+│   └── performance_data/            # Model performance logs
+│       ├── INFO.md                  # Performance documentation
+│       ├── generalizing_tsr_model/  # Generalized model results
+│       └── specialized_tsr_model/   # Specialized model results
+├── integrations_&_strategy/         # Trading automation and integration
+│   ├── automated_trader.py          # Main automated trading script
+│   ├── schedule_trader.py           # Scheduling and automation
+│   ├── config.json                  # Trading configuration
+│   ├── requirements.txt             # Integration dependencies
+│   └── README.md                    # Integration documentation
+└── automated_setup.sh               # Complete project setup script
 ```
 
 ## 🛠️ Installation & Setup
@@ -58,13 +83,51 @@ neural_trade_engine/
 - Python 3.8+
 - Financial Modeling Prep API key ([Get one here](https://financialmodelingprep.com/developer/docs))
 
-### Environment Setup
+### Quick Installation
+
+**Option 1: Automated Setup (Recommended)**
 ```bash
+git clone https://github.com/yourusername/neural_trade_engine.git
+cd neural_trade_engine
+chmod +x automated_setup.sh
+./automated_setup.sh
+```
+
+**Option 2: Manual Setup**
+```bash
+git clone https://github.com/yourusername/neural_trade_engine.git
+cd neural_trade_engine/backend_&_algorithms
+chmod +x install.sh
+./install.sh
+
 # Set your API key
 export FMP_API_KEY=your_api_key_here
+```
 
-# Install dependencies (if not already installed)
-pip install torch pandas numpy scikit-learn requests matplotlib
+## 🚀 Quick Start
+
+### Basic Usage
+
+**Train a model:**
+```bash
+cd backend_&_algorithms
+python main.py train --tickers AAPL MSFT --days 730
+```
+
+**Make predictions:**
+```bash
+python main.py predict --ticker AAPL --confidence
+```
+
+**Run trading simulation:**
+```bash
+python main.py simulate --strategy ml_prediction --days 30
+```
+
+**Start automated trading:**
+```bash
+cd ../integrations_&_strategy
+python automated_trader.py --stocks AAPL,MSFT,NVDA
 ```
 
 ## 💻 Command Line Interface
@@ -351,8 +414,28 @@ The core model combines two data streams:
 
 ## 🔄 Typical Workflow
 
-Here's a common workflow for using the Neural Trade Engine:
+Here's the typical workflow for automated trading:
 
+### Automated Trading Setup
+1. **Configure Trading Parameters**:
+   ```bash
+   cd integrations_&_strategy
+   nano config.json  # Edit trading configuration
+   ```
+
+2. **Test Configuration**:
+   ```bash
+   python automated_trader.py --dry-run
+   ```
+
+3. **Schedule Daily Execution**:
+   ```bash
+   python schedule_trader.py --start
+   ```
+
+4. **Monitor Performance**: Check logs and trading decisions in real-time
+
+### Command Line Trading
 1. **Set API Key**: 
    ```bash
    export FMP_API_KEY=your_api_key_here
@@ -360,6 +443,7 @@ Here's a common workflow for using the Neural Trade Engine:
 
 2. **Train Model**: 
    ```bash
+   cd backend_&_algorithms
    python main.py train --tickers AAPL MSFT --epochs 50
    ```
 
@@ -370,14 +454,18 @@ Here's a common workflow for using the Neural Trade Engine:
 
 4. **Run Simulation**: 
    ```bash
-   python main.py simulate --strategy ml_prediction --model engine/unified_model/models/latest.pth
+   python main.py simulate --strategy ml_prediction --days 30
    ```
 
-5. **Analyze Results**: Review exported JSON/CSV files and performance metrics
-
-6. **Interactive Trading**: 
+5. **Interactive Trading**: 
    ```bash
-   python main.py paper-trade
+   python main.py paper-trade --balance 100000
+   ```
+
+6. **Automated Trading**: 
+   ```bash
+   cd ../integrations_&_strategy
+   python automated_trader.py --config config.json
    ```
 
 ## 📈 Performance Metrics
@@ -399,13 +487,16 @@ This software is for educational and research purposes only. Past performance do
 ## 🛠️ Development
 
 ### Adding New Strategies
-Extend the `TradingStrategy` class in `engine/paper_trading/strategies.py`
+Create new trading strategies by extending the existing framework in the engine package
 
 ### Custom Model Architectures
-Modify `engine/unified_model/integrated_model.py`
+Modify `backend_&_algorithms/engine/tsr_model/models.py` for neural network architectures
 
 ### Additional Data Sources
-Extend the data pipelines in `engine/unified_model/data_pipelines/`
+Extend the data pipelines in `backend_&_algorithms/engine/tsr_model/data_pipelines/`
+
+### Integration Extensions
+Add new trading strategies in `integrations_&_strategy/automated_trader.py` or extend the CLI in `backend_&_algorithms/main.py`
 
 ## 🛠️ Troubleshooting
 
@@ -429,9 +520,16 @@ Extend the data pipelines in `engine/unified_model/data_pipelines/`
 ```
 - Solution: Train a model first using: `python main.py train --tickers AAPL`
 
+**Permission Errors:**
+```bash
+❌ Permission denied when running automated_trader.py
+```
+- Solution: Ensure scripts are executable: `chmod +x automated_trader.py`
+
 ### Getting Help
 
 - **Command Help**: `python main.py --help` or `python main.py <command> --help`
+- **Check Model Status**: Use `python main.py models` to see available trained models
 - **Check Logs**: Review error messages and stack traces
 - **Verify Setup**: Ensure FMP_API_KEY is set and dependencies are installed
 - **Model Status**: Use `python main.py models` to see available trained models
@@ -440,8 +538,8 @@ Extend the data pipelines in `engine/unified_model/data_pipelines/`
 
 - Python 3.8+
 - Financial Modeling Prep API key ([Get one here](https://financialmodelingprep.com/developer/docs))
-- Dependencies: `torch pandas numpy scikit-learn requests matplotlib`
+- Dependencies: Install via `pip install -r requirements.txt`
 
 ---
 
-**Built with ❤️ for algorithmic trading research and education**
+**Built with ❤️ for automated algorithmic trading and portfolio management**

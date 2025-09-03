@@ -1,16 +1,6 @@
 
 # May need to automate model downloading as well
 
-echo "Beginning setup.."
-echo ""
-read -p "Enter your new username: " username
-read -p "Enter your new password: " password
-echo ""
-echo "Creating .env file.."
-touch .env
-echo "USERNAME=${username}" >> .env
-echo "PASSWORD=${password}" >> .env
-echo ""
 
 echo "Setting up Python virtual environment.."
 sudo apt install python3-full
@@ -38,3 +28,5 @@ echo ""
 cd ../../../..
 
 echo "Setup and installation complete."
+echo ""
+echo ""

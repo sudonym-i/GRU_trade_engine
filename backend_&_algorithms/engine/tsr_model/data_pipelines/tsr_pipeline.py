@@ -48,7 +48,7 @@ class TSRDataPipeline:
         return price_features
     
     def create_tsr_dataset(self, tickers: List[str], start_date: str, end_date: str,
-                             seq_length: int = 60, interval: str = "2h", 
+                             seq_length: int = 60, interval: str = "1 day", 
                              normalize: bool = True) -> TensorDataset:
         """
         Create TSR dataset from price sequences and technical indicators.
@@ -58,7 +58,7 @@ class TSRDataPipeline:
             start_date: Start date for price data (YYYY-MM-DD)
             end_date: End date for price data (YYYY-MM-DD) 
             seq_length: Length of price sequences
-            interval: Price data interval ('2h', '1h', '1d', etc.)
+            interval: Price data interval ('30 mins', '1 hour', '1 day', etc.)
             normalize: Whether to normalize features
             
         Returns:

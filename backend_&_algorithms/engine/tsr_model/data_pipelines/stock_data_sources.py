@@ -14,82 +14,150 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-def install_yfinance():
-    """Install yfinance if not available."""
+def install_ib_insync():
+    """Install ib_insync if not available."""
     try:
-        import yfinance
+        import ib_insync
         return True
     except ImportError:
-        logger.info("Installing yfinance...")
+        logger.info("Installing ib_insync...")
         try:
             import subprocess
-            subprocess.check_call([sys.executable, "-m", "pip", "install", "yfinance"])
-            import yfinance
+            subprocess.check_call([sys.executable, "-m", "pip", "install", "ib_insync"])
+            import ib_insync
             return True
         except Exception as e:
-            logger.error(f"Failed to install yfinance: {e}")
+            logger.error(f"Failed to install ib_insync: {e}")
             return False
 
 
-def fetch_yahoo_finance_data(ticker: str, start_date: str, end_date: str, interval: str = "1d") -> Optional[pd.DataFrame]:
+def fetch_ib_data(ticker: str, start_date: str, end_date: str, interval: str = "1 day", 
+                  host: str = '127.0.0.1', port: int = 7497, client_id: int = 1) -> Optional[pd.DataFrame]:
     """
-    Fetch stock data from Yahoo Finance using yfinance.
-    Supports multiple intervals including 2-hour resampled data.
+    Fetch stock data from Interactive Brokers using ib_insync.
+    Supports daily intervals for swing trading and ML models.
     
     Args:
         ticker: Stock symbol
         start_date: Start date (YYYY-MM-DD)
-        end_date: End date (YYYY-MM-DD)
-        interval: Data interval ("1d", "1h", "2h", etc.)
+        end_date: End date (YYYY-MM-DD) 
+        interval: Data interval ("1 day", "1 hour", "30 mins", etc.)
+        host: IB Gateway/TWS host (default: localhost)
+        port: IB Gateway/TWS port (default: 7497)
+        client_id: Client ID for connection
     """
-    if not install_yfinance():
+    if not install_ib_insync():
         return None
         
     try:
-        import yfinance as yf
+        from ib_insync import IB, Stock, util
         
-        logger.info(f"Fetching {ticker} data from Yahoo Finance...")
+        logger.info(f"Connecting to Interactive Brokers at {host}:{port}...")
         
-        # Handle 2-hour intervals by resampling 1-hour data
-        if interval == "2h":
-            logger.info("Fetching 1-hour data and resampling to 2-hour intervals...")
-            stock = yf.Ticker(ticker)
-            df = stock.history(start=start_date, end=end_date, interval="1h")
-            
-            if df.empty:
-                logger.warning(f"No 1-hour data found for {ticker}")
-                return None
-            
-            # Resample to 2-hour intervals using proper OHLC aggregation
-            df_2h = df.resample('2h').agg({
-                'Open': 'first',
-                'High': 'max', 
-                'Low': 'min',
-                'Close': 'last',
-                'Volume': 'sum'
-            }).dropna()
-            
-            logger.info(f"Resampled to 2-hour intervals: {len(df_2h)} records")
-            df = df_2h
+        # Connect to IB Gateway or TWS
+        ib = IB()
+        try:
+            ib.connect(host, port, clientId=client_id, timeout=10)
+        except Exception as e:
+            logger.error(f"Failed to connect to IB: {e}")
+            logger.info("Make sure IB Gateway or TWS is running with API enabled")
+            return None
+        
+        logger.info(f"Fetching {ticker} data from Interactive Brokers...")
+        
+        # Create contract (assume US stocks)
+        contract = Stock(ticker, 'SMART', 'USD')
+        
+        # Calculate duration string from date range
+        start_dt = datetime.strptime(start_date, '%Y-%m-%d')
+        end_dt = datetime.strptime(end_date, '%Y-%m-%d')
+        days_diff = (end_dt - start_dt).days
+        
+        if days_diff <= 30:
+            duration_str = f"{days_diff} D"
+        elif days_diff <= 365:
+            weeks = days_diff // 7
+            duration_str = f"{weeks} W"
+        elif days_diff <= 365 * 2:
+            # For periods > 12 months, IB requires years format
+            years = days_diff / 365.25  # Account for leap years
+            duration_str = f"{years:.1f} Y"
         else:
-            # Use native interval for other cases
-            stock = yf.Ticker(ticker)
-            df = stock.history(start=start_date, end=end_date, interval=interval)
+            # For very long periods, use integer years
+            years = int(days_diff / 365.25)
+            duration_str = f"{years} Y"
+        
+        # Request historical data
+        # IB requires format: YYYYMMDD HH:MM:SS with timezone
+        end_datetime = datetime.strptime(end_date, '%Y-%m-%d').strftime('%Y%m%d 23:59:59 US/Eastern')
+        
+        # Map interval to IB bar size format
+        interval_mapping = {
+            '30 mins': '30 mins',
+            '1 hour': '1 hour', 
+            '2 hours': '2 hours',
+            '1 day': '1 day',
+            '30min': '30 mins',
+            '1h': '1 hour',
+            '2h': '2 hours',
+            '1d': '1 day'
+        }
+        bar_size = interval_mapping.get(interval, '30 mins')
+        
+        bars = ib.reqHistoricalData(
+            contract,
+            endDateTime=end_datetime,
+            durationStr=duration_str,
+            barSizeSetting=bar_size,
+            whatToShow='TRADES',
+            useRTH=True  # Regular trading hours only
+        )
+        
+        # Disconnect
+        ib.disconnect()
+        
+        if not bars:
+            logger.warning(f"No data found for {ticker}")
+            return None
+        
+        # Convert to pandas DataFrame
+        df = util.df(bars)
         
         if df.empty:
             logger.warning(f"No data found for {ticker}")
             return None
         
-        # Keep only OHLCV data (remove Adj Close, Dividends, Stock Splits if present)
+        # Rename columns to match existing format
+        df = df.rename(columns={
+            'open': 'Open',
+            'high': 'High', 
+            'low': 'Low',
+            'close': 'Close',
+            'volume': 'Volume'
+        })
+        
+        # Keep only OHLCV data
         base_columns = ['Open', 'High', 'Low', 'Close', 'Volume']
         available_columns = [col for col in base_columns if col in df.columns]
         df = df[available_columns]
         
-        logger.info(f"Successfully fetched {len(df)} records from Yahoo Finance")
+        # Ensure index is datetime and filter to exact date range
+        if hasattr(df.index, 'date'):
+            # Index is already datetime
+            df = df[(df.index.date >= start_dt.date()) & (df.index.date <= end_dt.date())]
+        else:
+            # Index might be RangeIndex, check if there's a date column to set as index
+            if 'date' in df.columns:
+                df.index = pd.to_datetime(df['date'])
+                df = df.drop('date', axis=1)
+                df = df[(df.index.date >= start_dt.date()) & (df.index.date <= end_dt.date())]
+            # If no date column, assume data is already in correct range (recent data)
+        
+        logger.info(f"Successfully fetched {len(df)} records from Interactive Brokers")
         return df
         
     except Exception as e:
-        logger.error(f"Error fetching Yahoo Finance data: {e}")
+        logger.error(f"Error fetching Interactive Brokers data: {e}")
         return None
 
 
@@ -154,19 +222,29 @@ def fetch_alpha_vantage_data(ticker: str, api_key: str = None) -> Optional[pd.Da
 
 
 def generate_mock_stock_data(ticker: str, start_date: str, end_date: str, 
-                           base_price: float = None) -> pd.DataFrame:
+                           base_price: float = None, interval: str = "1 day") -> pd.DataFrame:
     """
     Generate realistic mock stock data for testing.
-    Uses random walk with realistic patterns.
+    Uses random walk with realistic patterns. Optimized for daily intervals.
     """
     logger.info(f"Generating mock data for {ticker}")
     
     start_dt = pd.to_datetime(start_date)
     end_dt = pd.to_datetime(end_date)
-    dates = pd.date_range(start=start_dt, end=end_dt, freq='D')
     
-    # Remove weekends
-    dates = dates[~dates.weekday.isin([5, 6])]
+    # Generate appropriate frequency based on interval
+    if "min" in interval:
+        # For minute data, generate business hours only (9:30 AM - 4:00 PM EST)
+        dates = pd.date_range(start=start_dt, end=end_dt, freq='30min')
+        # Filter to business hours only
+        dates = dates[(dates.hour >= 9) & (dates.hour < 16)]
+        # Remove weekends
+        dates = dates[~dates.weekday.isin([5, 6])]
+    else:
+        # Daily data
+        dates = pd.date_range(start=start_dt, end=end_dt, freq='D')
+        # Remove weekends
+        dates = dates[~dates.weekday.isin([5, 6])]
     
     if base_price is None:
         # Set realistic base prices for common tickers
@@ -235,29 +313,30 @@ def generate_mock_stock_data(ticker: str, start_date: str, end_date: str,
     return df
 
 
-def get_stock_data_smart(ticker: str, start_date: str, end_date: str, interval: str = "1d") -> Optional[pd.DataFrame]:
+def get_stock_data_smart(ticker: str, start_date: str, end_date: str, interval: str = "1 day") -> Optional[pd.DataFrame]:
     """
     Smart stock data fetcher that tries multiple sources in order of preference.
+    Now prioritizes Interactive Brokers for real-time trading.
     
     Args:
         ticker: Stock symbol
         start_date: Start date (YYYY-MM-DD)
         end_date: End date (YYYY-MM-DD)
-        interval: Data interval ("1d", "1h", "2h", etc.)
+        interval: Data interval ("1 day", "1 hour", "30 mins", etc.)
         
     Returns:
         DataFrame with OHLCV data or None if all sources fail
     """
     logger.info(f"Fetching stock data for {ticker} from {start_date} to {end_date}")
     
-    # Try Yahoo Finance first (most reliable and free)
-    data = fetch_yahoo_finance_data(ticker, start_date, end_date, interval)
+    # Try Interactive Brokers first (real-time data for trading)
+    data = fetch_ib_data(ticker, start_date, end_date, interval)
     if data is not None and not data.empty:
-        logger.info("Successfully used Yahoo Finance data")
+        logger.info("Successfully used Interactive Brokers data")
         return data
     
-    # Try Alpha Vantage if Yahoo fails
-    logger.info("Yahoo Finance failed, trying Alpha Vantage...")
+    # Try Alpha Vantage if IB fails
+    logger.info("Interactive Brokers failed, trying Alpha Vantage...")
     data = fetch_alpha_vantage_data(ticker)
     if data is not None and not data.empty:
         # Filter to date range
@@ -268,7 +347,7 @@ def get_stock_data_smart(ticker: str, start_date: str, end_date: str, interval: 
     
     # If all APIs fail, generate mock data for testing
     logger.warning("All APIs failed, generating mock data for testing")
-    data = generate_mock_stock_data(ticker, start_date, end_date)
+    data = generate_mock_stock_data(ticker, start_date, end_date, interval=interval)
     return data
 
 

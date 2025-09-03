@@ -11,7 +11,6 @@ Usage:
     python main.py train --tickers AAPL MSFT GOOGL --days 730
     python main.py predict --ticker AAPL --model models/latest_model.pth
     python main.py webscrape --ticker AAPL
-    python main.py paper-trade --balance 50000
     python main.py simulate --tickers AAPL MSFT --strategy momentum --days 30
 """
 
@@ -344,9 +343,9 @@ def main():
     train_parser = subparsers.add_parser('train', help='Train a prediction model')
     ticker_group = train_parser.add_mutually_exclusive_group(required=True)
     ticker_group.add_argument('--ticker', type=str,
-                             help='Single stock ticker to train on (e.g., AAPL)')
+                             help='Single stock ticker to train on (e.g., NVDA) - RECOMMENDED')
     ticker_group.add_argument('--tickers', nargs='+',
-                             help='Multiple stock tickers to train on (e.g., AAPL MSFT GOOGL)')
+                             help='Multiple stock tickers (NOT RECOMMENDED - use --ticker for best performance)')
     train_parser.add_argument('--days', type=int, default=730,
                              help='Days of historical data (default: 730)')
     train_parser.add_argument('--model-type', choices=['standard', 'adaptive'], 
@@ -378,30 +377,7 @@ def main():
     info_parser = subparsers.add_parser('info', help='Show model information')
     info_parser.add_argument('--model', required=True, help='Model file path')
     
-    # Paper trading command
-    paper_parser = subparsers.add_parser('paper-trade', help='Start paper trading session')
-    paper_parser.add_argument('--balance', type=float, default=100000,
-                             help='Starting balance (default: $100,000)')
-    paper_parser.add_argument('--save', help='Save portfolio state to file')
-    
-    # Simulation command
-    sim_parser = subparsers.add_parser('simulate', help='Run automated trading simulation')
-    sim_parser.add_argument('--tickers', nargs='+', default=['AAPL', 'MSFT'], 
-                           help='Stock tickers to trade')
-    sim_parser.add_argument('--balance', type=float, default=1000,
-                           help='Starting balance (default: $1,000)')
-    sim_parser.add_argument('--days', type=int, default=30,
-                           help='Simulation duration in days')
-    sim_parser.add_argument('--strategy', choices=['buy_hold', 'momentum', 'ml_prediction'],
-                           default='buy_hold', help='Trading strategy to use')
-    sim_parser.add_argument('--model', help='Model path for ML strategy')
-    sim_parser.add_argument('--frequency', type=float, default=6,
-                           help='Update frequency in hours (default: 6)')
-    sim_parser.add_argument('--realtime', action='store_true',
-                           help='Run in real-time (slower but more realistic)')
-    sim_parser.add_argument('--save', help='Save simulation results to JSON file')
-    sim_parser.add_argument('--export-csv', help='Export trade history to CSV file')
-    
+
     # Parse arguments
     args = parser.parse_args()
     
@@ -409,9 +385,9 @@ def main():
         parser.print_help()
         return 0
     
-    # Using free data sources - no API key needed!
+    # Using Interactive Brokers API for real-time trading data
     if args.command in ['train', 'predict']:
-        print(Colors.dim("Note: Using free Yahoo Finance data - no API key required"))
+        print(Colors.dim("Note: Using Interactive Brokers API - ensure IB Gateway/TWS is running"))
     
     # Execute command
     if args.command == 'train':
