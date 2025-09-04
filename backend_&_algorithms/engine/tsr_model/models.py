@@ -6,7 +6,6 @@ from typing import Optional
 
 class TSRStockPredictor(nn.Module):
     """
-    TSR (Technical Stock Return) model for stock prediction using price patterns.
     Uses GRU with optional attention mechanism for sequential price data.
     """
     
