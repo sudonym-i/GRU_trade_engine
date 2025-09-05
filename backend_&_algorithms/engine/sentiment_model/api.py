@@ -396,25 +396,3 @@ def get_latest_analysis() -> Dict[str, Union[bool, str, Dict]]:
             "error_type": type(e).__name__
         }
 
-
-if __name__ == "__main__":
-    # Demo usage
-    print("=== Sentiment Model Route Demo ===")
-    
-    # Test web scraping
-    print("\n1. Testing web scraper...")
-    pull_from_web("AAPL", "youtube.raw")
-    print("Web scraping completed")
-    
-    # Test sentiment analysis
-    print("\n2. Testing sentiment analysis...")
-    analysis_result = analyze_sentiment()
-    print(f"Analysis result: {analysis_result['success']}")
-    print(f"Message: {analysis_result['message']}")
-    
-    if analysis_result['success']:
-        stats = analysis_result['statistics']
-        print(f"Segments processed: {stats.get('predictions_made', 0)}")
-        print(f"Overall sentiment: {stats.get('overall_sentiment', 'unknown')}")
-    
-    print("\n=== Demo Complete ===")
