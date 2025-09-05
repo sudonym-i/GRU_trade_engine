@@ -50,13 +50,20 @@ echo "Setup complete."
 echo ""
 echo ""
 
-
+echo ""
+echo "===================================="
+echo ""
+read -p "What ticker do you want to algorithmically trade?: " ticker
+read -p "Enter semantic name (EX: GOOG would be -> google): " semantic_name
+echo ""
+echo ""
 read -p "Train sentiment model?: (y/n): " train_models
 echo ""
 
 if [ "$train_models" == "y" ] || [ "$train_models" == "Y" ]; then
 
     ../../../.venv/bin/python3 download_dataset.py
+    ../../../.venv/bin/python3 tokenize_pipeline.py
     echo ""
     echo "Training sentiment model..."
     echo ""
@@ -64,14 +71,6 @@ if [ "$train_models" == "y" ] || [ "$train_models" == "Y" ]; then
     ../../../.venv/bin/python3 train_with_labeled_data.py
 
 fi
-
-
-
-echo ""
-echo "===================================="
-echo ""
-read -p "What ticker do you want to algorithmically trade?: " ticker
-read -p "Enter semantic name (EX: GOOG would be -> google): " semantic_name
 
 cd ..
 
@@ -82,6 +81,7 @@ read -p "Train TSR model? (y/n): " train_tsr
 echo ""
 echo ""
 if [ "$train_tsr" == "y" || "$train_tsr" == "Y" ]; then
+    echo "Training TSR model for $ticker..."
     ../.venv/bin/python3 main.py train --ticker "$ticker"
 fi
 
