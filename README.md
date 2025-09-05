@@ -1,7 +1,7 @@
 
-# Neural Trade Engine
+# TSR Trade Engine
 
-**Status:** Needs fixing
+**Status:** Needs testing
 
 **Version:** 1.0.0
 
@@ -11,7 +11,7 @@
 
 ## Overview
 
-The Neural Trade Engine is a comprehensive trading platform that provides:
+The TSR Trade Engine is a comprehensive trading platform that provides:
 
 - **🧠 ML-Powered Predictions**: Main predictive power cmes from the Time Series Regression model trained on stock-price patterns
 - **📊 Multiple Trading Strategies**: Buy & Hold, Momentum, and ML-driven trading
@@ -23,7 +23,7 @@ The Neural Trade Engine is a comprehensive trading platform that provides:
 ## 📁 Project Structure
 
 ```
-neural_trade_engine/
+TSR_trade_engine/
 ├── README.md                        # Project documentation
 ├── backend_&_algorithms/            # Core ML and trading engine
 │   ├── main.py                      # CLI application entry point
