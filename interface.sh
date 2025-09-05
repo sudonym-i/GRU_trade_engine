@@ -28,6 +28,7 @@ echo ""
 echo "Setting up C++ environment.."
 echo ""
 echo ""
+mkdir backend_\&_algorithms/engine/sentiment_model/web_scraper/build
 sudo apt-get update && sudo apt upgrade
 sudo apt-get install libgtest-dev
 sudo apt-get install cmake
