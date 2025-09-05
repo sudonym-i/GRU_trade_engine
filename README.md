@@ -1,7 +1,7 @@
 
 # Neural Trade Engine
 
-**Status:** Working
+**Status:** Needs fixing
 
 **Version:** 1.0.0
 
