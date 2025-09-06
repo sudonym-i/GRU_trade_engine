@@ -1,3 +1,0 @@
-# Requirements for Automated Trading Integration
-apscheduler>=3.10.0  # Job scheduling for automated trading
-ib-insync>=0.9.86    # Interactive Brokers API integration

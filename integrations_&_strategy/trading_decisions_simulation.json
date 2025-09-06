@@ -38,5 +38,15 @@
     "action_taken": "Hold position",
     "trading_mode": "simulation",
     "timestamp": "2025-09-06T09:51:41.831820"
+  },
+  {
+    "ticker": "NVDA",
+    "signal": "HOLD",
+    "prediction_data": {
+      "confidence": 94.0
+    },
+    "action_taken": "Hold position",
+    "trading_mode": "simulation",
+    "timestamp": "2025-09-06T14:11:34.737275"
   }
 ]
