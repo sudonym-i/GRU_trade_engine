@@ -68,9 +68,9 @@ def pull_from_web(ticker: str, output_name: str) -> None:
             
             if chmod_result.returncode != 0:
                 logger.warning(f"chmod warning: {chmod_result.stderr}")
-            
-            # Execute the webscraper with parameters: output_name and ticker
-            logger.info(f"Executing webscraper with output_name='{output_name}' and ticker='{ticker}'")
+
+            # Execute the webscraper with parameters: ticker and output_name
+            logger.info(f"Executing webscraper with ticker='{ticker}' and output_name='{output_name}'")
             result = subprocess.run(
                 [f"./{webscraper_exe}", output_name, ticker],
                 capture_output=True,

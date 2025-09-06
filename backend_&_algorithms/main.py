@@ -407,8 +407,7 @@ def main():
 
 if __name__ == "__main__":
     try:
-        exit_code = main()
-        sys.exit(exit_code)
+        main()
     except KeyboardInterrupt:
         print(Colors.yellow("\nInterrupted by user"))
         sys.exit(1)
