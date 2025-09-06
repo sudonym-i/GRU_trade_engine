@@ -18,5 +18,25 @@
     "action_taken": "Hold position",
     "trading_mode": "simulation",
     "timestamp": "2025-09-06T09:20:58.921593"
+  },
+  {
+    "ticker": "GOOG",
+    "signal": "HOLD",
+    "prediction_data": {
+      "confidence": 94.0
+    },
+    "action_taken": "Hold position",
+    "trading_mode": "simulation",
+    "timestamp": "2025-09-06T09:47:45.530905"
+  },
+  {
+    "ticker": "GOOG",
+    "signal": "HOLD",
+    "prediction_data": {
+      "confidence": 94.0
+    },
+    "action_taken": "Hold position",
+    "trading_mode": "simulation",
+    "timestamp": "2025-09-06T09:51:41.831820"
   }
 ]
