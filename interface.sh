@@ -27,7 +27,6 @@ echo ""
 echo ""
 echo "Setting up C++ environment.."
 echo ""
-echo ""
 mkdir backend_\&_algorithms/engine/sentiment_model/web_scraper/build
 sudo apt-get update && sudo apt upgrade
 sudo apt-get install libgtest-dev
@@ -60,6 +59,17 @@ echo ""
 read -p "Train sentiment model?: (y/n): " train_models
 echo ""
 
+# if these directories don't exist, create them
+if [ ! -d "raw_data" ]; then
+    mkdir raw_data
+fi
+
+if [ ! -d "processed_data" ]; then
+    mkdir processed_data
+fi
+
+../../.venv/bin/python3 main.py webscrape --ticker "$semantic_name"
+
 if [ "$train_models" == "y" ] || [ "$train_models" == "Y" ]; then
 
     ../../../.venv/bin/python3 download_dataset.py
@@ -74,13 +84,13 @@ fi
 
 cd ..
 
-../.venv/bin/python3 main.py webscrape --ticker "$semantic_name"
+
 echo ""
 echo ""
 read -p "Train TSR model? (y/n): " train_tsr
 echo ""
 echo ""
-if [ "$train_tsr" == "y" || "$train_tsr" == "Y" ]; then
+if [ "$train_tsr" == "y" ] || [ "$train_tsr" == "Y" ]; then
     echo "Training TSR model for $ticker..."
     ../.venv/bin/python3 main.py train --ticker "$ticker"
 fi
