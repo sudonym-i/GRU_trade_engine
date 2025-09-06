@@ -4,7 +4,8 @@ echo "===================="
 echo ""
 echo ""
 
-
+# Save current directory, hopefully help with the path issues
+here=$(pwd)
 
 # May need to automate model downloading as well
 
@@ -13,22 +14,23 @@ echo ""
 echo ""
 sudo apt install python3-full
 
-if [ ! -d ".venv" ]; then
-    python3 -m venv .venv
+if [ ! -d "$here/.venv" ]; then
+    python3 -m venv "$here/.venv"
 fi
 
-source .venv/bin/activate
+source "$here/.venv/bin/activate"
 
 echo "Installing Python dependencies.."
 echo ""
 echo ""
-pip install -r backend_\&_algorithms/engine/requirements.txt
+pip install -r "$here/backend_&_algorithms/engine/requirements.txt"
 echo ""
 echo ""
 echo "Setting up C++ environment.."
 echo ""
-mkdir backend_\&_algorithms/engine/sentiment_model/web_scraper/build
+mkdir "$here/backend_&_algorithms/engine/sentiment_model/web_scraper/build"
 sudo apt-get update && sudo apt upgrade
+sudo apt install cmake
 sudo apt-get install libgtest-dev
 sudo apt-get install cmake
 sudo apt install libfmt-dev 
@@ -37,16 +39,15 @@ sudo apt install libcurl4-gnutls-dev
 echo ""
 echo "Compiling c++"
 echo ""
-cd backend_\&_algorithms/engine/sentiment_model/web_scraper/build
+cd "$here/backend_&_algorithms/engine/sentiment_model/web_scraper/build"
 cmake ..
 make
 chmod +x webscrape.exe && echo "C++ build successful"
 echo ""
-cd ../..
+cd "$here"
 echo ""
 echo ""
 echo "Setup complete."
-echo ""
 echo ""
 
 echo ""
@@ -59,30 +60,32 @@ echo ""
 read -p "Train sentiment model?: (y/n): " train_models
 echo ""
 
+
 # if these directories don't exist, create them
-if [ ! -d "raw_data" ]; then
-    mkdir raw_data
+if [ ! -d "$here/backend_&_algorithms/engine/sentiment_model/raw_data" ]; then
+    mkdir "$here/backend_&_algorithms/engine/sentiment_model/raw_data"
 fi
 
-if [ ! -d "processed_data" ]; then
-    mkdir processed_data
+if [ ! -d "$here/backend_&_algorithms/engine/sentiment_model/processed_data" ]; then
+    mkdir "$here/backend_&_algorithms/engine/sentiment_model/processed_data"
 fi
 
-../../.venv/bin/python3 main.py webscrape --ticker "$semantic_name"
+cd "$here/backend_&_algorithms/"
+"$here/.venv/bin/python3" "main.py" webscrape --ticker "$semantic_name"
 
 if [ "$train_models" == "y" ] || [ "$train_models" == "Y" ]; then
-
-    ../../../.venv/bin/python3 download_dataset.py
-    ../../../.venv/bin/python3 tokenize_pipeline.py
+    cd "$here/backend_&_algorithms/engine/sentiment_model/"
+    "$here/.venv/bin/python3" "$here/backend_&_algorithms/engine/sentiment_model/download_dataset.py"
+    "$here/.venv/bin/python3" "$here/backend_&_algorithms/engine/sentiment_model/tokenize_pipeline.py"
     echo ""
     echo "Training sentiment model..."
     echo ""
 
-    ../../../.venv/bin/python3 train_with_labeled_data.py
+    "$here/.venv/bin/python3" "$here/backend_&_algorithms/engine/sentiment_model/train.py"
 
 fi
 
-cd ..
+cd "$here"
 
 
 echo ""
@@ -90,18 +93,20 @@ echo ""
 read -p "Train TSR model? (y/n): " train_tsr
 echo ""
 echo ""
+
+cd "$here/backend_&_algorithms/"
 if [ "$train_tsr" == "y" ] || [ "$train_tsr" == "Y" ]; then
     echo "Training TSR model for $ticker..."
-    ../.venv/bin/python3 main.py train --ticker "$ticker"
+    "$here/.venv/bin/python3" main.py train --ticker "$ticker"
 fi
 
-cd ../integrations_\&_strategy
-# Virtual environment activated via direct python path
+cd "$here/integrations_&_strategy"
+
 nano config.json
 echo ""
 echo ""
 read -p "Start automated trading now? (y/n): " start
-if [ "$start" == "y" || "$start" == "Y" ]; then
+if [ "$start" == "y" ] || [ "$start" == "Y" ]; then
     echo ""
     echo "Select Trading Mode:"
     echo "1) Simulation Mode (paper trading with virtual portfolio - recommended for testing)"
@@ -114,21 +119,21 @@ if [ "$start" == "y" || "$start" == "Y" ]; then
         1)
             echo "Starting automated trading in SIMULATION mode..."
             echo "Portfolio will use virtual $10,000 starting capital."
-            ../.venv/bin/python3 automated_trader.py --mode simulation --stock "$ticker" --semantic-name "$semantic_name"
+            "$here/.venv/bin/python3" automated_trader.py --mode simulation --stock "$ticker" --semantic-name "$semantic_name"
             ;;
         2)
             echo "Starting automated trading in IB PAPER TRADING mode..."
             echo "Testing IB connection first..."
-            ../.venv/bin/python3 test_ib_connection.py --mode paper
+            "$here/.venv/bin/python3" test_ib_connection.py --mode paper
             if [ $? -eq 0 ]; then
-                ../.venv/bin/python3 automated_trader.py --mode ib_paper --stock "$ticker" --semantic-name "$semantic_name"
+                "$here/.venv/bin/python3" automated_trader.py --mode ib_paper --stock "$ticker" --semantic-name "$semantic_name"
             else
                 echo "IB connection test failed. Please check:"
                 echo "1. IB Gateway or TWS is running"
                 echo "2. API is enabled in IB settings"
                 echo "3. Paper trading port 7496 is configured"
                 echo "Falling back to simulation mode..."
-                ../.venv/bin/python3 automated_trader.py --mode simulation --stock "$ticker" --semantic-name "$semantic_name"
+                "$here/.venv/bin/python3" automated_trader.py --mode simulation --stock "$ticker" --semantic-name "$semantic_name"
             fi
             ;;
         3)
@@ -137,10 +142,10 @@ if [ "$start" == "y" || "$start" == "Y" ]; then
             read -p "Are you absolutely sure you want to continue? (yes/no): " confirm
             if [ "$confirm" == "yes" ]; then
                 echo "Testing IB live connection first..."
-                ../.venv/bin/python3 test_ib_connection.py --mode live
+                "$here/.venv/bin/python3" test_ib_connection.py --mode live
                 if [ $? -eq 0 ]; then
                     echo "Starting LIVE TRADING - Good luck!"
-                    ../.venv/bin/python3 automated_trader.py --mode ib_live --stock "$ticker" --semantic-name "$semantic_name"
+                    "$here/.venv/bin/python3" automated_trader.py --mode ib_live --stock "$ticker" --semantic-name "$semantic_name"
                 else
                     echo "IB live connection test failed. Please check:"
                     echo "1. IB Gateway or TWS is running"
@@ -151,17 +156,17 @@ if [ "$start" == "y" || "$start" == "Y" ]; then
                 fi
             else
                 echo "Live trading cancelled. Falling back to simulation mode..."
-                ../.venv/bin/python3 automated_trader.py --mode simulation --stock "$ticker" --semantic-name "$semantic_name"
+                "$here/.venv/bin/python3" automated_trader.py --mode simulation --stock "$ticker" --semantic-name "$semantic_name"
             fi
             ;;
         *)
             echo "Invalid choice. Defaulting to simulation mode..."
-            ../.venv/bin/python3 automated_trader.py --mode simulation --stock "$ticker" --semantic-name "$semantic_name"
+            "$here/.venv/bin/python3" automated_trader.py --mode simulation --stock "$ticker" --semantic-name "$semantic_name"
             ;;
     esac
 else
     echo "Setup complete. You can start trading later with:"
-    echo "  Simulation:     ../.venv/bin/python3 automated_trader.py --mode simulation --stock $ticker --semantic-name $semantic_name"
-    echo "  IB Paper:       ../.venv/bin/python3 automated_trader.py --mode ib_paper --stock $ticker --semantic-name $semantic_name"
-    echo "  IB Live:        ../.venv/bin/python3 automated_trader.py --mode ib_live --stock $ticker --semantic-name $semantic_name"
+    echo "  Simulation:     $here/.venv/bin/python3 automated_trader.py --mode simulation --stock $ticker --semantic-name $semantic_name"
+    echo "  IB Paper:       $here/.venv/bin/python3 automated_trader.py --mode ib_paper --stock $ticker --semantic-name $semantic_name"
+    echo "  IB Live:        $here/.venv/bin/python3 automated_trader.py --mode ib_live --stock $ticker --semantic-name $semantic_name"
 fi
