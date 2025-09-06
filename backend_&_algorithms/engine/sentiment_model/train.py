@@ -268,9 +268,9 @@ def main():
     parser.add_argument('--epochs', type=int, default=3, help='Number of training epochs')
     parser.add_argument('--batch_size', type=int, default=8, help='Batch size for training')
     parser.add_argument('--learning_rate', type=float, default=2e-5, help='Learning rate')
-    parser.add_argument('--train_file', default='processed_data/large_train_tokenized_labeled.json', 
+    parser.add_argument('--train_file', default='processed_data/train_tokenized.json', 
                        help='Training data file')
-    parser.add_argument('--val_file', default='processed_data/large_val_tokenized_labeled.json', 
+    parser.add_argument('--val_file', default='processed_data/validation_tokenized.json', 
                        help='Validation data file')
     
     args = parser.parse_args()
