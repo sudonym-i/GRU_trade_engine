@@ -1,5 +1,5 @@
 {
-  "target_stock": "GOOG",
+  "target_stock": "tsla",
   "trading_mode": "simulation",
   "confidence_threshold": 0.65,
   "price_change_threshold": 0.02,
@@ -21,6 +21,6 @@
     "log_level": "INFO",
     "keep_days": 30
   },
-  "semantic_name": "google",
+  "semantic_name": "wrgrea",
   "time_interval": "5min"
 }
