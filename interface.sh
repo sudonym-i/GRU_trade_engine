@@ -97,7 +97,7 @@ fi
 
 cd ../integrations_\&_strategy
 # Virtual environment activated via direct python path
-nano config.json
+
 echo ""
 echo ""
 read -p "Start automated trading now? (y/n): " start
@@ -114,14 +114,18 @@ if [ "$start" == "y" || "$start" == "Y" ]; then
         1)
             echo "Starting automated trading in SIMULATION mode..."
             echo "Portfolio will use virtual $10,000 starting capital."
-            ../.venv/bin/python3 automated_trader.py --mode simulation --stock "$ticker" --semantic-name "$semantic_name"
+            jq '.trading_mode = "simulation"' config.json > temp.json && mv temp.json config.json
+            jq '.target_stock = "$ticker"' config.json > temp.json && mv temp.json config.json
+            "$here/.venv/bin/python3" schedule_trader.py --start 
+
             ;;
         2)
             echo "Starting automated trading in IB PAPER TRADING mode..."
             echo "Testing IB connection first..."
-            ../.venv/bin/python3 test_ib_connection.py --mode paper
+            $here/.venv/bin/python3 test_ib_connection.py --mode paper
             if [ $? -eq 0 ]; then
-                ../.venv/bin/python3 automated_trader.py --mode ib_paper --stock "$ticker" --semantic-name "$semantic_name"
+                jq '.trading_mode = "ib_paper"' config.json > temp.json && mv temp.json config.json
+                jq '.target_stock = "$ticker"' config.json > temp.json && mv temp.json config.json
             else
                 echo "IB connection test failed. Please check:"
                 echo "1. IB Gateway or TWS is running"
@@ -137,10 +141,11 @@ if [ "$start" == "y" || "$start" == "Y" ]; then
             read -p "Are you absolutely sure you want to continue? (yes/no): " confirm
             if [ "$confirm" == "yes" ]; then
                 echo "Testing IB live connection first..."
-                ../.venv/bin/python3 test_ib_connection.py --mode live
+                $here/.venv/bin/python3 test_ib_connection.py --mode live
                 if [ $? -eq 0 ]; then
                     echo "Starting LIVE TRADING - Good luck!"
-                    ../.venv/bin/python3 automated_trader.py --mode ib_live --stock "$ticker" --semantic-name "$semantic_name"
+                jq '.trading_mode = "ib_live"' config.json > temp.json && mv temp.json config.json
+                jq '.target_stock = "$ticker"' config.json > temp.json && mv temp.json config.json
                 else
                     echo "IB live connection test failed. Please check:"
                     echo "1. IB Gateway or TWS is running"
@@ -151,17 +156,19 @@ if [ "$start" == "y" || "$start" == "Y" ]; then
                 fi
             else
                 echo "Live trading cancelled. Falling back to simulation mode..."
-                ../.venv/bin/python3 automated_trader.py --mode simulation --stock "$ticker" --semantic-name "$semantic_name"
+                $here/.venv/bin/python3 automated_trader.py --mode simulation --stock "$ticker" --semantic-name "$semantic_name"
             fi
             ;;
         *)
             echo "Invalid choice. Defaulting to simulation mode..."
-            ../.venv/bin/python3 automated_trader.py --mode simulation --stock "$ticker" --semantic-name "$semantic_name"
+            $here/.venv/bin/python3 automated_trader.py --mode simulation --stock "$ticker" --semantic-name "$semantic_name"
             ;;
     esac
 else
     echo "Setup complete. You can start trading later with:"
-    echo "  Simulation:     ../.venv/bin/python3 automated_trader.py --mode simulation --stock $ticker --semantic-name $semantic_name"
-    echo "  IB Paper:       ../.venv/bin/python3 automated_trader.py --mode ib_paper --stock $ticker --semantic-name $semantic_name"
-    echo "  IB Live:        ../.venv/bin/python3 automated_trader.py --mode ib_live --stock $ticker --semantic-name $semantic_name"
+    echo ""
+    echo "  Simulation:     $here/.venv/bin/python3 automated_trader.py --mode simulation --stock $ticker --semantic-name $semantic_name"
+    echo "  IB Paper:       $here/.venv/bin/python3 automated_trader.py --mode ib_paper --stock $ticker --semantic-name $semantic_name"
+    echo "  IB Live:        $here/.venv/bin/python3 automated_trader.py --mode ib_live --stock $ticker --semantic-name $semantic_name"
+    echo ""
 fi

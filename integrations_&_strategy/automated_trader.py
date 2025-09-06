@@ -70,26 +70,27 @@ class AutomatedTrader:
     Automated trading system that makes daily predictions and trading decisions.
     """
     
-    def __init__(self, config_path: Optional[str] = None, trading_mode: str = 'simulation', semantic_name: Optional[str] = None):
+    def __init__(self, config_path: Optional[str] = None, trading_mode: Optional[str] = None, semantic_name: Optional[str] = None):
         """
         Initialize the automated trader.
         
         Args:
             config_path: Path to configuration file
-            trading_mode: Trading mode ('simulation', 'ib_paper', 'ib_live')
+            trading_mode: Trading mode ('simulation', 'ib_paper', 'ib_live') - overrides config
             semantic_name: Semantic name for webscraping (e.g., "google" for GOOGL)
         """
         self.config = self._load_config(config_path)
-        self.trading_mode = trading_mode
+        # Use provided trading_mode or fall back to config, then default
+        self.trading_mode = trading_mode or self.config.get('trading_mode', 'simulation')
         self.semantic_name = semantic_name
         self.backend_path = os.path.join(os.path.dirname(__file__), '..', 'backend_&_algorithms')
-        self.portfolio_file = f'portfolio_state_{trading_mode}.json'
-        self.trading_log = f'trading_decisions_{trading_mode}.json'
+        self.portfolio_file = f'portfolio_state_{self.trading_mode}.json'
+        self.trading_log = f'trading_decisions_{self.trading_mode}.json'
         
         # Initialize IB interface if needed
         self.ib_interface = None
-        if trading_mode in ['ib_paper', 'ib_live']:
-            mode = 'paper' if trading_mode == 'ib_paper' else 'live'
+        if self.trading_mode in ['ib_paper', 'ib_live']:
+            mode = 'paper' if self.trading_mode == 'ib_paper' else 'live'
             self.ib_interface = IBTradingInterface(mode=mode)
         
         # Initialize portfolio if not exists
@@ -99,6 +100,7 @@ class AutomatedTrader:
         """Load configuration from file or use defaults."""
         default_config = {
             "target_stock": "NVDA",
+            "trading_mode": "simulation",
             "confidence_threshold": 0.65,
             "price_change_threshold": 0.02,  # 2% minimum price change
             "position_size": 1.0,  # 100% focus on single stock
