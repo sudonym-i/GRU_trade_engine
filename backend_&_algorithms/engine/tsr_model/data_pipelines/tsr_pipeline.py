@@ -8,6 +8,7 @@ import logging
 
 # Import local pipeline components
 from .price_data import TSRDataLoader, add_technical_indicators, create_sequences
+from .config_utils import get_time_interval
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -48,7 +49,7 @@ class TSRDataPipeline:
         return price_features
     
     def create_tsr_dataset(self, tickers: List[str], start_date: str, end_date: str,
-                             seq_length: int = 60, interval: str = "1 day", 
+                             seq_length: int = 60, interval: Optional[str] = None, 
                              normalize: bool = True) -> TensorDataset:
         """
         Create TSR dataset from price sequences and technical indicators.
@@ -58,12 +59,16 @@ class TSRDataPipeline:
             start_date: Start date for price data (YYYY-MM-DD)
             end_date: End date for price data (YYYY-MM-DD) 
             seq_length: Length of price sequences
-            interval: Price data interval ('30 mins', '1 hour', '1 day', etc.)
+            interval: Price data interval ('1hr', '5min', '1d', etc.). If None, reads from config.json
             normalize: Whether to normalize features
             
         Returns:
             TensorDataset with price features and targets
         """
+        # Use config interval if not provided
+        if interval is None:
+            interval = get_time_interval()
+            logger.info(f"Using time interval from config: {interval}")
         logger.info(f"Creating TSR dataset for {tickers} from {start_date} to {end_date}")
         
         all_X, all_y = [], []
@@ -117,7 +122,8 @@ class TSRDataPipeline:
         
         return TensorDataset(X_tensor, y_tensor)
     
-    def get_feature_info(self, ticker: str, start_date: str, end_date: str) -> Dict:
+    def get_feature_info(self, ticker: str, start_date: str, end_date: str, 
+                        interval: Optional[str] = None) -> Dict:
         """
         Get information about available features for a ticker.
         
@@ -125,12 +131,13 @@ class TSRDataPipeline:
             ticker: Stock symbol
             start_date: Start date
             end_date: End date
+            interval: Price data interval. If None, reads from config.json
             
         Returns:
             Dictionary with feature information
         """
         # Get sample data
-        tsr_loader = TSRDataLoader(ticker, start_date, end_date)
+        tsr_loader = TSRDataLoader(ticker, start_date, end_date, interval)
         price_data = tsr_loader.fetch_data()
         if price_data is None or price_data.empty:
             raise ValueError(f"No price data available for {ticker}")

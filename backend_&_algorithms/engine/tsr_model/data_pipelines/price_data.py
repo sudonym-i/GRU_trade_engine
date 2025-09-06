@@ -18,6 +18,8 @@ try:
 except ImportError:
     pass
 
+from .config_utils import get_time_interval
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -26,7 +28,7 @@ class TSRDataLoader:
     """Data loader for stock price data from Financial Modeling Prep API."""
     
     def __init__(self, ticker: str, start_date: str, end_date: str, 
-                 interval: str = "1d", api_key: Optional[str] = None):
+                 interval: Optional[str] = None, api_key: Optional[str] = None):
         """
         Initialize TSR data loader.
         
@@ -34,15 +36,18 @@ class TSRDataLoader:
             ticker: Stock ticker symbol
             start_date: Start date (YYYY-MM-DD)
             end_date: End date (YYYY-MM-DD)
-            interval: Data frequency ('1d', '1h', '5m', etc.)
+            interval: Data frequency ('1d', '1h', '5m', etc.). If None, reads from config.json
             api_key: FMP API key
         """
         self.ticker = ticker
         self.start_date = start_date
         self.end_date = end_date
-        self.interval = interval
+        # Use config interval if not provided
+        self.interval = interval if interval is not None else get_time_interval()
         # Yahoo Finance doesn't need an API key
         self.api_key = api_key  # Keep for compatibility but not required
+        
+        logger.info(f"TSRDataLoader initialized with interval: {self.interval}")
     
     def _get_interval_mapping(self, interval: str) -> str:
         """Map interval to FMP API format."""
@@ -141,7 +146,7 @@ def create_sequences(data: pd.DataFrame, seq_length: int):
 
 
 def get_price_features(ticker: str, start_date: str, end_date: str, 
-                      interval: str = "1d", normalize: bool = False) -> pd.DataFrame:
+                      interval: Optional[str] = None, normalize: bool = False) -> pd.DataFrame:
     """
     Get price data with technical indicators for a ticker.
     
@@ -149,7 +154,7 @@ def get_price_features(ticker: str, start_date: str, end_date: str,
         ticker: Stock ticker symbol
         start_date: Start date (YYYY-MM-DD)
         end_date: End date (YYYY-MM-DD)
-        interval: Data frequency
+        interval: Data frequency. If None, reads from config.json
         normalize: Whether to normalize features
         
     Returns:

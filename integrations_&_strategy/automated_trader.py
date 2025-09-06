@@ -101,6 +101,7 @@ class AutomatedTrader:
         default_config = {
             "target_stock": "NVDA",
             "trading_mode": "simulation",
+            "time_interval": "1d",  # Default time interval
             "confidence_threshold": 0.65,
             "price_change_threshold": 0.02,  # 2% minimum price change
             "position_size": 1.0,  # 100% focus on single stock
@@ -230,9 +231,14 @@ class AutomatedTrader:
             # Use semantic name for webscraping if provided, otherwise use ticker
             webscrape_name = self.semantic_name if self.semantic_name else ticker
             logger.info(f"Running webscraping for {ticker} (using semantic name: {webscrape_name})...")
+            
+            # Get time interval from config (in case webscraping needs it for frequency)
+            time_interval = self.config.get('time_interval', '1d')
+            
             cmd = [
                 'python3', 'main.py', 'webscrape', 
-                '--ticker', webscrape_name
+                '--ticker', webscrape_name,
+                '--interval', time_interval
             ]
             
             result = subprocess.run(
@@ -269,9 +275,15 @@ class AutomatedTrader:
         """
         try:
             logger.info(f"Running prediction for {ticker}...")
+            
+            # Get time interval from config
+            time_interval = self.config.get('time_interval', '1d')
+            logger.info(f"Using time interval: {time_interval}")
+            
             cmd = [
                 'python3', 'main.py', 'predict', 
-                '--ticker', ticker
+                '--ticker', ticker,
+                '--interval', time_interval
             ]
             
             result = subprocess.run(

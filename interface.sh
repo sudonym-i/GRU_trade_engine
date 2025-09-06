@@ -52,6 +52,24 @@ echo "===================================="
 echo ""
 read -p "What ticker do you want to algorithmically trade?: " ticker
 read -p "Enter semantic name (EX: GOOG would be -> google): " semantic_name
+echo "What time interval do you want to trade at?"
+echo "1 : 1hr"
+echo "2 : 5min"
+echo "3 : 15min"
+echo "4 : 30min"
+echo "5 : 1d"
+read -p "Enter your choice (1-5): " time_interval
+
+# Convert numeric choice to actual time interval
+case $time_interval in
+    1) interval_value="1hr" ;;
+    2) interval_value="5min" ;;
+    3) interval_value="15min" ;;
+    4) interval_value="30min" ;;
+    5) interval_value="1d" ;;
+    *) interval_value="1hr" ;; # default
+esac
+
 echo ""
 echo ""
 read -p "Train sentiment model?: (y/n): " train_models
@@ -115,9 +133,9 @@ if [ "$start" == "y" ] || [ "$start" == "Y" ]; then
         1)
             echo "Starting automated trading in SIMULATION mode..."
             echo "Portfolio will use virtual \$10,000 starting capital."
-            # Update config.json with ticker, semantic_name and mode
-            jq --arg ticker "$ticker" --arg semantic_name "$semantic_name" --arg mode "simulation" \
-                '.target_stock = $ticker | .semantic_name = $semantic_name | .trading_mode = $mode' \
+            # Update config.json with ticker, semantic_name, mode and time_interval
+            jq --arg ticker "$ticker" --arg semantic_name "$semantic_name" --arg mode "simulation" --arg interval "$interval_value" \
+                '.target_stock = $ticker | .semantic_name = $semantic_name | .trading_mode = $mode | .time_interval = $interval' \
                 config.json > config.json.tmp && mv config.json.tmp config.json
             nano config.json
             $here/.venv/bin/python3 schedule_trader.py --start
@@ -125,9 +143,9 @@ if [ "$start" == "y" ] || [ "$start" == "Y" ]; then
         2)
             echo "Starting automated trading in IB PAPER TRADING mode..."
             echo "Testing IB connection first..."
-            # Update config.json with ticker, semantic_name and mode
-            jq --arg ticker "$ticker" --arg semantic_name "$semantic_name" --arg mode "ib_paper" \
-                '.target_stock = $ticker | .semantic_name = $semantic_name | .trading_mode = $mode' \
+            # Update config.json with ticker, semantic_name, mode and time_interval
+            jq --arg ticker "$ticker" --arg semantic_name "$semantic_name" --arg mode "ib_paper" --arg interval "$interval_value" \
+                '.target_stock = $ticker | .semantic_name = $semantic_name | .trading_mode = $mode | .time_interval = $interval' \
                 config.json > config.json.tmp && mv config.json.tmp config.json
             $here/.venv/bin/python3 test_ib_connection.py --mode paper
             if [ $? -eq 0 ]; then
@@ -139,8 +157,8 @@ if [ "$start" == "y" ] || [ "$start" == "Y" ]; then
                 echo "3. Paper trading port 7496 is configured"
                 echo "Falling back to simulation mode..."
                 # Update config back to simulation mode
-                jq --arg ticker "$ticker" --arg semantic_name "$semantic_name" --arg mode "simulation" \
-                    '.target_stock = $ticker | .semantic_name = $semantic_name | .trading_mode = $mode' \
+                jq --arg ticker "$ticker" --arg semantic_name "$semantic_name" --arg mode "simulation" --arg interval "$interval_value" \
+                    '.target_stock = $ticker | .semantic_name = $semantic_name | .trading_mode = $mode | .time_interval = $interval' \
                     config.json > config.json.tmp && mv config.json.tmp config.json
                 nano config.json
                 $here/.venv/bin/python3 schedule_trader.py --start
@@ -152,9 +170,9 @@ if [ "$start" == "y" ] || [ "$start" == "Y" ]; then
             read -p "Are you absolutely sure you want to continue? (yes/no): " confirm
             if [ "$confirm" == "yes" ]; then
                 echo "Testing IB live connection first..."
-                # Update config.json with ticker, semantic_name and mode
-                jq --arg ticker "$ticker" --arg semantic_name "$semantic_name" --arg mode "ib_live" \
-                    '.target_stock = $ticker | .semantic_name = $semantic_name | .trading_mode = $mode' \
+                # Update config.json with ticker, semantic_name, mode and time_interval
+                jq --arg ticker "$ticker" --arg semantic_name "$semantic_name" --arg mode "ib_live" --arg interval "$interval_value" \
+                    '.target_stock = $ticker | .semantic_name = $semantic_name | .trading_mode = $mode | .time_interval = $interval' \
                     config.json > config.json.tmp && mv config.json.tmp config.json
                 nano config.json
                 $here/.venv/bin/python3 test_ib_connection.py --mode live
@@ -175,8 +193,8 @@ if [ "$start" == "y" ] || [ "$start" == "Y" ]; then
             else
                 echo "Live trading cancelled. Falling back to simulation mode..."
                 # Update config.json with simulation mode
-                jq --arg ticker "$ticker" --arg semantic_name "$semantic_name" --arg mode "simulation" \
-                    '.target_stock = $ticker | .semantic_name = $semantic_name | .trading_mode = $mode' \
+                jq --arg ticker "$ticker" --arg semantic_name "$semantic_name" --arg mode "simulation" --arg interval "$interval_value" \
+                    '.target_stock = $ticker | .semantic_name = $semantic_name | .trading_mode = $mode | .time_interval = $interval' \
                     config.json > config.json.tmp && mv config.json.tmp config.json
                 
                 $here/.venv/bin/python3 automated_trader.py --mode simulation --stock "$ticker" --semantic-name "$semantic_name"
@@ -184,9 +202,9 @@ if [ "$start" == "y" ] || [ "$start" == "Y" ]; then
             ;;
         *)
             echo "Invalid choice. Defaulting to simulation mode..."
-            # Update config.json with ticker, semantic_name and simulation mode
-            jq --arg ticker "$ticker" --arg semantic_name "$semantic_name" --arg mode "simulation" \
-                '.target_stock = $ticker | .semantic_name = $semantic_name | .trading_mode = $mode' \
+            # Update config.json with ticker, semantic_name, simulation mode and time_interval
+            jq --arg ticker "$ticker" --arg semantic_name "$semantic_name" --arg mode "simulation" --arg interval "$interval_value" \
+                '.target_stock = $ticker | .semantic_name = $semantic_name | .trading_mode = $mode | .time_interval = $interval' \
                 config.json > config.json.tmp && mv config.json.tmp config.json
             
             $here/.venv/bin/python3 automated_trader.py --mode simulation --stock "$ticker" --semantic-name "$semantic_name"
