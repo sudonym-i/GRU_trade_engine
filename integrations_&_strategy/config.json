@@ -1,6 +1,6 @@
 {
-  "target_stock": "ggg",
-  "trading_mode": "simulation",
+  "target_stock": "nvda",
+  "trading_mode": "ib_paper",
   "confidence_threshold": 0.65,
   "price_change_threshold": 0.02,
   "position_size": 1,
@@ -21,6 +21,6 @@
     "log_level": "INFO",
     "keep_days": 30
   },
-  "semantic_name": "ggg",
+  "semantic_name": "nvidia",
   "time_interval": "5min"
 }

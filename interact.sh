@@ -495,10 +495,10 @@ if [ "$start" == "y" ] || [ "$start" == "Y" ]; then
         2)
             echo -e "\n${GEAR}${ORANGE}${BOLD} LAUNCHING IB PAPER TRADING ${NC}"
             echo -e "${ORANGE}${BOLD}╭─────────── Interactive Brokers Connection ─────────────╮${NC}"
-            echo -e "${ORANGE}${BOLD}│${NC}                                                       ${ORANGE}${BOLD}│${NC}"
-            echo -e "${ORANGE}${BOLD}│${NC} ${LIGHTNING} Testing IB Gateway connection...                    ${ORANGE}${BOLD}│${NC}"
-            echo -e "${ORANGE}${BOLD}│${NC} ${SHIELD} Paper trading account - no real money risk          ${ORANGE}${BOLD}│${NC}"
-            echo -e "${ORANGE}${BOLD}│${NC}                                                       ${ORANGE}${BOLD}│${NC}"
+            echo -e "${ORANGE}${BOLD}│${NC}                                                        ${ORANGE}${BOLD}│${NC}"
+            echo -e "${ORANGE}${BOLD}│${NC} ${LIGHTNING} Testing IB Gateway connection...                     ${ORANGE}${BOLD}│${NC}"
+            echo -e "${ORANGE}${BOLD}│${NC} ${SHIELD} Paper trading account - no real money risk           ${ORANGE}${BOLD}│${NC}"
+            echo -e "${ORANGE}${BOLD}│${NC}                                                        ${ORANGE}${BOLD}│${NC}"
             echo -e "${ORANGE}${BOLD}╰────────────────────────────────────────────────────────╯${NC}"
             
             show_progress 2 "${GEAR} Configuring IB paper parameters"
@@ -509,11 +509,11 @@ if [ "$start" == "y" ] || [ "$start" == "Y" ]; then
                 '.target_stock = $ticker | .semantic_name = $semantic_name | .trading_mode = $mode | .time_interval = $interval' \
                 config.json > config.json.tmp && mv config.json.tmp config.json
             show_progress 3 "${LIGHTNING} Testing IB connection"
-            $here/.venv/bin/python3 test_ib_connection.py --mode paper > /dev/null 2>&1
+            source $here/.venv/bin/activate && $here/.venv/bin/python3 tests/test_ib_connection.py --mode paper > /dev/null 2>&1
             if [ $? -eq 0 ]; then
                 echo -e "\n${GREEN}${BOLD}╭─ IB CONNECTION SUCCESSFUL ─────────────────────────────────╮${NC}"
-                echo -e "${GREEN}${BOLD}│${NC} ${CHECKMARK} Interactive Brokers connection established          ${GREEN}${BOLD}│${NC}"
-                echo -e "${GREEN}${BOLD}│${NC} ${CHECKMARK} Paper trading mode activated                        ${GREEN}${BOLD}│${NC}"
+                echo -e "${GREEN}${BOLD}│${NC} ${CHECKMARK} Interactive Brokers connection established               ${GREEN}${BOLD}│${NC}"
+                echo -e "${GREEN}${BOLD}│${NC} ${CHECKMARK} Paper trading mode activated                             ${GREEN}${BOLD}│${NC}"
                 echo -e "${GREEN}${BOLD}╰────────────────────────────────────────────────────────────╯${NC}"
                 
                 show_progress 2 "${ROCKET} Launching IB paper trading"
@@ -526,7 +526,7 @@ if [ "$start" == "y" ] || [ "$start" == "Y" ]; then
                 echo -e "${RED}${BOLD}│${NC} ${WARNING} ${YELLOW}Please verify the following:${NC}                          ${RED}${BOLD}│${NC}"
                 echo -e "${RED}${BOLD}│${NC}   ${GRAY}• IB Gateway or TWS is running${NC}                        ${RED}${BOLD}│${NC}"
                 echo -e "${RED}${BOLD}│${NC}   ${GRAY}• API is enabled in IB settings${NC}                       ${RED}${BOLD}│${NC}"
-                echo -e "${RED}${BOLD}│${NC}   ${GRAY}• Paper trading port 7496 is configured${NC}               ${RED}${BOLD}│${NC}"
+                echo -e "${RED}${BOLD}│${NC}   ${GRAY}• Paper trading port 7497 is configured${NC}               ${RED}${BOLD}│${NC}"
                 echo -e "${RED}${BOLD}│${NC}                                                        ${RED}${BOLD}│${NC}"
                 echo -e "${RED}${BOLD}╰─────────────────────────────────────────────────────────╯${NC}"
                 
@@ -577,7 +577,7 @@ if [ "$start" == "y" ] || [ "$start" == "Y" ]; then
                 nano config.json
                 
                 show_progress 3 "${LIGHTNING} Testing live IB connection"
-                $here/.venv/bin/python3 test_ib_connection.py --mode live > /dev/null 2>&1
+                source $here/.venv/bin/activate && $here/.venv/bin/python3 tests/test_ib_connection.py --mode live > /dev/null 2>&1
                 if [ $? -eq 0 ]; then
                     echo -e "\n${GREEN}${BOLD}╭─ LIVE CONNECTION SUCCESSFUL ───────────────────────────────╮${NC}"
                     echo -e "${GREEN}${BOLD}│${NC} ${CHECKMARK} Interactive Brokers live connection established     ${GREEN}${BOLD}│${NC}"
@@ -593,7 +593,7 @@ if [ "$start" == "y" ] || [ "$start" == "Y" ]; then
                     echo -e "  ${YELLOW}Please check:${NC}"
                     echo -e "    ${GRAY}• IB Gateway or TWS is running${NC}"
                     echo -e "    ${GRAY}• API is enabled in IB settings${NC}"
-                    echo -e "    ${GRAY}• Live trading port 7497 is configured${NC}"
+                    echo -e "    ${GRAY}• Live trading port 7496 is configured${NC}"
                     echo -e "    ${GRAY}• You have live trading permissions${NC}"
                     echo -e "\n${RED}${BOLD}🛑 Aborting live trading for safety${NC}"
                 fi

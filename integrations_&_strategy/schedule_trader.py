@@ -253,17 +253,21 @@ class TradingScheduler:
     
     def _is_market_hours(self):
         """Check if current time is during market hours (9:30 AM - 4:00 PM ET, Mon-Fri)."""
-        now = datetime.now()
+        import pytz
+        
+        # Get current time in Eastern timezone
+        et_tz = pytz.timezone('US/Eastern')
+        now_et = datetime.now(et_tz)
         
         # Check if it's a weekday
-        if now.weekday() >= 5:  # Saturday or Sunday
+        if now_et.weekday() >= 5:  # Saturday or Sunday
             return False
         
-        # Check if it's during market hours (9:30 AM - 4:00 PM)
-        market_open = now.replace(hour=9, minute=30, second=0, microsecond=0)
-        market_close = now.replace(hour=16, minute=0, second=0, microsecond=0)
+        # Check if it's during market hours (9:30 AM - 4:00 PM ET)
+        market_open = now_et.replace(hour=9, minute=30, second=0, microsecond=0)
+        market_close = now_et.replace(hour=16, minute=0, second=0, microsecond=0)
         
-        return market_open <= now <= market_close
+        return market_open <= now_et <= market_close
     
     async def start_scheduler(self):
         """Start the scheduler."""

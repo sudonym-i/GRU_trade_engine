@@ -282,21 +282,40 @@ class AutomatedTrader:
                 '--interval', time_interval
             ]
             
-            result = subprocess.run(
+            # Use Popen to capture output while still showing it in terminal
+            import subprocess
+            from subprocess import Popen, PIPE, STDOUT
+            
+            process = Popen(
                 cmd,
                 cwd=self.backend_path,
-                capture_output=True,
+                stdout=PIPE,
+                stderr=STDOUT,
                 text=True,
-                timeout=600  # 10 minute timeout
+                bufsize=1,
+                universal_newlines=True
             )
             
-            if result.returncode == 0:
+            # Capture output while displaying it
+            output_lines = []
+            while True:
+                output = process.stdout.readline()
+                if output == '' and process.poll() is not None:
+                    break
+                if output:
+                    print(output.strip())  # Display to terminal
+                    output_lines.append(output)  # Capture for parsing
+            
+            # Wait for process to complete and get return code
+            return_code = process.poll()
+            captured_output = ''.join(output_lines)
+            
+            if return_code == 0:
                 logger.info(f"Prediction successful for {ticker}")
                 # Parse the output to extract prediction data
-                # Note: You may need to modify main.py to output JSON format
-                return {"ticker": ticker, "success": True, "output": result.stdout}
+                return {"ticker": ticker, "success": True, "output": captured_output}
             else:
-                logger.error(f"Prediction failed for {ticker}: {result.stderr}")
+                logger.error(f"Prediction failed for {ticker}")
                 return None
                 
         except subprocess.TimeoutExpired:
