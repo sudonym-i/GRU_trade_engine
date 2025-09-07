@@ -79,13 +79,13 @@ show_progress() {
     
     echo -ne "${INFO}${task_name}${NC} ["
     for ((i=0; i<=width; i++)); do
-        printf "%*s" $i | tr ' ' "|"
-        printf "%*s" $((width-i)) | tr ' ' "#"
+        printf "%*s" $i | tr ' ' "#"
+        printf "%*s" $((width-i)) | tr ' ' "_"
         printf "] %d%%" $((i*100/width))
         sleep $(echo "scale=2; $duration/$width" | bc -l)
         printf "\r${INFO}${task_name}${NC} ["
     done
-    printf "%*s" $width | tr ' ' "-"
+    printf "%*s" $width | tr ' ' "|"
     printf "] 100%%\n"
 }
 
@@ -162,7 +162,7 @@ echo -e "${SUCCESS}${BOLD}│${NC} ${CHECKMARK} ${SUBTLE}Neural Networks:${NC} $
 echo -e "${SUCCESS}${BOLD}│${NC} ${CHECKMARK} ${SUBTLE}Market Interface:${NC} ${SUCCESS}Online${NC}                   ${SUCCESS}${BOLD}│${NC}"
 echo -e "${SUCCESS}${BOLD}╰──────────────────────────────────────────────╯${NC}"
 echo -e "\n"
-
+echo -e "\n"
 # Save current directory, hopefully help with the path issues
 here=$(pwd)
 
@@ -172,11 +172,11 @@ echo -e "${LIGHTNING}${YELLOW}${BOLD} STEP 1/4 ${NC}${INFO}${BOLD}Setting up Pyt
 echo -e "${INFO}╭──────────────────────────────────────────────────────╮${NC}"
 echo -e "${INFO}│${NC} ${GEAR} Preparing Python environment...                    ${INFO}│${NC}"
 echo -e "${INFO}╰──────────────────────────────────────────────────────╯${NC}"
-
-echo -ne "${CYAN}${BOLD}Installing Python3-full...${NC}"
 sudo apt install python3-full > /dev/null 2>&1 &
+echo -ne "${CYAN}${BOLD}Handling Python3-full...${NC}"
+
 PID=$!
-spinner $PID "Installing Python3-full"
+spinner $PID "Handling Python3-full"
 
 show_progress 2 "${GEAR} Creating virtual environment"
 if [ ! -d "$here/.venv" ]; then
@@ -185,26 +185,28 @@ fi
 
 show_progress 1 "${LIGHTNING} Activating virtual environment"
 source "$here/.venv/bin/activate"
-
+echo -e "\n"
+echo -e "\n"
 echo -e "\n${SUCCESS}${BOLD}╭─ STEP 1 COMPLETE ───────────────────────────────────╮${NC}"
 echo -e "${SUCCESS}${BOLD}│${NC} ${CHECKMARK} Virtual environment ready                         ${SUCCESS}${BOLD}│${NC}"
 echo -e "${SUCCESS}${BOLD}│${NC} ${CHECKMARK} Python3 installed and configured                  ${SUCCESS}${BOLD}│${NC}"
 echo -e "${SUCCESS}${BOLD}╰─────────────────────────────────────────────────────╯${NC}"
 echo ""
-echo -e "${LIGHTNING}${YELLOW}${BOLD} STEP 2/4 ${NC}${LIGHT_BLUE}${BOLD}Installing Python dependencies${NC}"
+echo -e "${LIGHTNING}${YELLOW}${BOLD} STEP 2/4 ${NC}${LIGHT_BLUE}${BOLD}Handling Python dependencies${NC}"
 echo -e "${LIGHT_CYAN}╭──────────────────────────────────────────────────────╮${NC}"
-echo -e "${LIGHT_CYAN}│${NC} ${GEAR} Installing required Python packages...             ${LIGHT_CYAN}│${NC}"
+echo -e "${LIGHT_CYAN}│${NC} ${GEAR} Handling required Python packages...               ${LIGHT_CYAN}│${NC}"
 echo -e "${LIGHT_CYAN}╰──────────────────────────────────────────────────────╯${NC}"
 
 echo -ne "${PURPLE}${BOLD}Reading requirements.txt...${NC}"
 echo ""
 show_progress 1 "${GEAR} Analyzing dependencies"
 
-echo -ne "${CYAN}${BOLD}Installing packages...${NC}"
+echo -ne "${CYAN}${BOLD}Handling packages...${NC}"
 pip install -r "$here/backend_&_algorithms/engine/requirements.txt" > /dev/null 2>&1 &
 PID=$!
-spinner $PID "Installing Python dependencies"
-
+spinner $PID "Handling Python dependencies"
+echo -e "\n"
+echo -e "\n"
 echo -e "\n${GREEN}${BOLD}╭─ STEP 2 COMPLETE ───────────────────────────────────╮${NC}"
 echo -e "${GREEN}${BOLD}│${NC} ${CHECKMARK} Python dependencies installed                     ${GREEN}${BOLD}│${NC}"
 echo -e "${GREEN}${BOLD}│${NC} ${CHECKMARK} All packages verified and ready                   ${GREEN}${BOLD}│${NC}"
@@ -221,21 +223,21 @@ mkdir -p "$here/backend_&_algorithms/engine/sentiment_model/web_scraper/build"
 show_progress 3 "${GEAR} Updating package repositories"
 sudo apt-get update > /dev/null 2>&1 && sudo apt upgrade -y > /dev/null 2>&1
 
-echo -ne "${PURPLE}${BOLD}Installing C++ dependencies...${NC}\n"
+echo -ne "${PURPLE}${BOLD}Handling C++ dependencies...${NC}\n"
 
-show_progress 2 "${GEAR} Installing CMake"
+show_progress 2 "${GEAR} Handling CMake"
 sudo apt install cmake -y > /dev/null 2>&1
 
-show_progress 2 "${GEAR} Installing Google Test"
+show_progress 2 "${GEAR} Handling Google Test"
 sudo apt-get install libgtest-dev -y > /dev/null 2>&1
 
-show_progress 2 "${GEAR} Installing fmt library"
+show_progress 2 "${GEAR} Handling fmt library"
 sudo apt install libfmt-dev -y > /dev/null 2>&1
 
-show_progress 2 "${GEAR} Installing cURL"
+show_progress 2 "${GEAR} Handling cURL"
 sudo apt install curl -y > /dev/null 2>&1
 
-show_progress 2 "${GEAR} Installing cURL development libraries"
+show_progress 2 "${GEAR} Handling cURL development libraries"
 sudo apt install libcurl4-gnutls-dev -y > /dev/null 2>&1
 
 echo -e "\n${FIRE}${PURPLE}${BOLD}Compiling C++ components...${NC}"
@@ -251,22 +253,25 @@ show_progress 1 "${CHECKMARK} Setting executable permissions"
 chmod +x webscrape.exe
 
 cd "$here"
-
+echo -e "\n"
+echo -e "\n"
 echo -e "\n${GREEN}${BOLD}╭─ STEP 3 COMPLETE ───────────────────────────────────╮${NC}"
 echo -e "${GREEN}${BOLD}│${NC} ${CHECKMARK} C++ environment configured                        ${GREEN}${BOLD}│${NC}"
 echo -e "${GREEN}${BOLD}│${NC} ${CHECKMARK} Web scraper compiled and ready                    ${GREEN}${BOLD}│${NC}"
 echo -e "${GREEN}${BOLD}│${NC} ${CHECKMARK} All C++ dependencies installed                    ${GREEN}${BOLD}│${NC}"
 echo -e "${GREEN}${BOLD}╰─────────────────────────────────────────────────────╯${NC}"
-echo ""
 
 echo -e "${SPARKLES}${YELLOW}${BOLD} STEP 4/4 ${NC}${LIGHT_GREEN}${BOLD}Setup complete!${NC} ${CHECKMARK}"
+echo -e "\n"
+echo -e "\n"
 echo -e "\n${LIGHT_PURPLE}${BOLD}╭══════════════════════════════════════════════════╮${NC}"
 echo -e "${LIGHT_PURPLE}${BOLD}║${NC}                                                  ${LIGHT_PURPLE}${BOLD}║${NC}"
 echo -e "${LIGHT_PURPLE}${BOLD}║${NC}      ${GEAR} ${LIGHT_CYAN}${BOLD}Configuration Phase${NC} ${TARGET}                     ${LIGHT_PURPLE}${BOLD}║${NC}"
 echo -e "${LIGHT_PURPLE}${BOLD}║${NC}    ${GRAY}${DIM}Customize your trading parameters${NC}             ${LIGHT_PURPLE}${BOLD}║${NC}"
 echo -e "${LIGHT_PURPLE}${BOLD}║${NC}                                                  ${LIGHT_PURPLE}${BOLD}║${NC}"
 echo -e "${LIGHT_PURPLE}${BOLD}╰══════════════════════════════════════════════════╯${NC}"
-echo ""
+echo -e "\n"
+echo -e "\n"
 echo -e "${TARGET}${YELLOW}${BOLD} CONFIGURATION ${NC}"
 echo -e "${LIGHT_BLUE}${BOLD}╭─────────────── Trading Parameters ──────────────╮${NC}"
 echo -e "${LIGHT_BLUE}${BOLD}│${NC}                                                 ${LIGHT_BLUE}${BOLD}│${NC}"
@@ -285,7 +290,8 @@ echo -e "${LIGHT_BLUE}${BOLD}│${NC}   ${LIGHT_GREEN}4${NC} ${ARROW_RIGHT} 30mi
 echo -e "${LIGHT_BLUE}${BOLD}│${NC}                                                 ${LIGHT_BLUE}${BOLD}│${NC}"
 echo -e "${LIGHT_BLUE}${BOLD}╰─────────────────────────────────────────────────╯${NC}"
 read -p "     Enter choice (1-5): " time_interval
-
+echo -e "\n"
+echo -e "\n"
 # Convert numeric choice to actual time interval
 case $time_interval in
     1) interval_value="1hr" ;;
@@ -304,7 +310,8 @@ echo -e "${LIGHT_PURPLE}${BOLD}│${NC}   ${GRAY}${DIM}(Recommended for better a
 echo -e "${LIGHT_PURPLE}${BOLD}│${NC}                                                  ${LIGHT_PURPLE}${BOLD}│${NC}"
 echo -e "${LIGHT_PURPLE}${BOLD}╰──────────────────────────────────────────────────╯${NC}"
 read -p "     Train sentiment model? (y/n): " train_models
-echo ""
+echo -e "\n"
+echo -e "\n"
 
 
 # if these directories don't exist, create them
@@ -336,7 +343,8 @@ echo -e "\n${GREEN}${BOLD}╭─ DATA COLLECTION COMPLETE ───────�
 echo -e "${GREEN}${BOLD}│${NC} ${CHECKMARK} Web scraping successful                                 ${GREEN}${BOLD}│${NC}"
 echo -e "${GREEN}${BOLD}│${NC} ${CHECKMARK} Market data collected and processed                     ${GREEN}${BOLD}│${NC}"
 echo -e "${GREEN}${BOLD}╰───────────────────────────────────────────────────────────╯${NC}"
-
+echo -e "\n"
+echo -e "\n"
 if [ "$train_models" == "y" ] || [ "$train_models" == "Y" ]; then
     echo -e "\n${BRAIN}${LIGHT_PURPLE}${BOLD} SENTIMENT MODEL TRAINING ${NC}"
     echo -e "${LIGHT_PURPLE}${BOLD}╭─────────────── Training Neural Network ──────────────╮${NC}"
@@ -359,7 +367,7 @@ if [ "$train_models" == "y" ] || [ "$train_models" == "Y" ]; then
     show_progress 8 "${BRAIN} Training neural network"
     echo -e "\n${HOURGLASS}${YELLOW}${BOLD} This may take 10-15 minutes depending on your hardware...${NC}\n"
     
-    "$here/.venv/bin/python3" "$here/backend_&_algorithms/engine/sentiment_model/train.py" > /dev/null 2>&1 &
+    "$here/.venv/bin/python3" "$here/backend_&_algorithms/engine/sentiment_model/train.py" &
     PID=$!
     spinner $PID "Training deep learning model"
     
@@ -371,43 +379,50 @@ if [ "$train_models" == "y" ] || [ "$train_models" == "Y" ]; then
 fi
 
 cd "$here"
-
+echo -e "\n"
+echo -e "\n"
 
 echo -e "\n${TARGET}${LIGHT_RED}${BOLD} TSR MODEL TRAINING ${NC}"
 echo -e "${LIGHT_RED}${BOLD}╭─────────────── Time Series Regression Model ─────────────╮${NC}"
-echo -e "${LIGHT_RED}${BOLD}│${NC}                                                           ${LIGHT_RED}${BOLD}│${NC}"
-echo -e "${LIGHT_RED}${BOLD}│${NC} ${ROCKET} ${WHITE}Train GRU prediction model?${NC}                           ${LIGHT_RED}${BOLD}│${NC}"
-echo -e "${LIGHT_RED}${BOLD}│${NC}     ${GRAY}${DIM}(Required for autonomous trading)${NC}                   ${LIGHT_RED}${BOLD}│${NC}"
-echo -e "${LIGHT_RED}${BOLD}│${NC}                                                            ${LIGHT_RED}${BOLD}│${NC}"
-echo -e "${LIGHT_RED}${BOLD}╰───────────────────────────────────────────────────────────╯${NC}"
+echo -e "${LIGHT_RED}${BOLD}│${NC}                                                          ${LIGHT_RED}${BOLD}│${NC}"
+echo -e "${LIGHT_RED}${BOLD}│${NC} ${ROCKET} ${WHITE}Train GRU prediction model?${NC}                            ${LIGHT_RED}${BOLD}│${NC}"
+echo -e "${LIGHT_RED}${BOLD}│${NC}     ${GRAY}${DIM}(Required for autonomous trading)${NC}                    ${LIGHT_RED}${BOLD}│${NC}"
+echo -e "${LIGHT_RED}${BOLD}│${NC}                                                          ${LIGHT_RED}${BOLD}│${NC}"
+echo -e "${LIGHT_RED}${BOLD}╰──────────────────────────────────────────────────────────╯${NC}"
 read -p "     Train TSR model? (y/n): " train_tsr
-echo ""
+echo -e "\n"
+echo -e "\n"
 
 cd "$here/backend_&_algorithms/"
 if [ "$train_tsr" == "y" ] || [ "$train_tsr" == "Y" ]; then
     echo -e "\n${CHART}${LIGHT_RED}${BOLD} GRU MODEL TRAINING ${NC}"
     echo -e "${LIGHT_RED}${BOLD}╭──────────── Time Series Regression Training ─────────────╮${NC}"
     echo -e "${LIGHT_RED}${BOLD}│${NC}                                                          ${LIGHT_RED}${BOLD}│${NC}"
-    echo -e "${LIGHT_RED}${BOLD}│${NC} ${FIRE} Training GRU model for ${NC}                                 ${LIGHT_RED}${BOLD}│${NC}"
-    echo -e "${LIGHT_RED}${BOLD}│${NC}     ${GRAY}${DIM}Analyzing price patterns and trends${NC}                   ${LIGHT_RED}${BOLD}│${NC}"
-    echo -e "${LIGHT_RED}${BOLD}│${NC}                                                           ${LIGHT_RED}${BOLD}│${NC}"
-    echo -e "${LIGHT_RED}${BOLD}╰───────────────────────────────────────────────────────────╯${NC}"
+    echo -e "${LIGHT_RED}${BOLD}│${NC} ${FIRE} Training GRU model for ${NC}                                ${LIGHT_RED}${BOLD}│${NC}"
+    echo -e "${LIGHT_RED}${BOLD}│${NC}     ${GRAY}${DIM}Analyzing price patterns and trends${NC}                  ${LIGHT_RED}${BOLD}│${NC}"
+    echo -e "${LIGHT_RED}${BOLD}│${NC}                                                          ${LIGHT_RED}${BOLD}│${NC}"
+    echo -e "${LIGHT_RED}${BOLD}╰──────────────────────────────────────────────────────────╯${NC}"
     
     show_progress 3 "${CHART} Fetching historical price data"
     show_progress 5 "${GEAR} Preprocessing time series data"
     show_progress 7 "${BRAIN} Training regression model"
     
-    "$here/.venv/bin/python3" main.py train --ticker "$ticker" > /dev/null 2>&1 &
+    "$here/.venv/bin/python3" main.py train --ticker "$ticker" &
     PID=$!
-    spinner $PID "Training TSR prediction model"
+
+    echo -e "\n${HOURGLASS}${YELLOW}${BOLD} This may take 10-30 minutes depending on your hardware...${NC}\n"
+
+
+    spinner $PID "Training GRU prediction model"
     
-    echo -e "\n${GREEN}${BOLD}╭─ TSR MODEL TRAINING COMPLETE ──────────────────────────────╮${NC}"
+    echo -e "\n${GREEN}${BOLD}╭─ GRU MODEL TRAINING COMPLETE ──────────────────────────────╮${NC}"
     echo -e "${GREEN}${BOLD}│${NC} ${CHECKMARK} GRU model trained successfully                           ${GREEN}${BOLD}│${NC}"
     echo -e "${GREEN}${BOLD}│${NC} ${CHECKMARK} Price prediction algorithm optimized                     ${GREEN}${BOLD}│${NC}"
     echo -e "${GREEN}${BOLD}│${NC} ${CHECKMARK} Ready for autonomous trading decisions                   ${GREEN}${BOLD}│${NC}"
     echo -e "${GREEN}${BOLD}╰────────────────────────────────────────────────────────────╯${NC}"
 fi
-
+echo -e "\n"
+echo -e "\n"
 cd $here/integrations_\&_strategy
 # Virtual environment activated via direct python path
 
@@ -435,15 +450,16 @@ if [ "$start" == "y" ] || [ "$start" == "Y" ]; then
     echo -e "${LIGHT_CYAN}${BOLD}│${NC}     ${GRAY}${DIM}Paper trading - safe testing environment${NC}           ${LIGHT_CYAN}${BOLD}│${NC}"
     echo -e "${LIGHT_CYAN}${BOLD}│${NC}                                                        ${LIGHT_CYAN}${BOLD}│${NC}"
     echo -e "${LIGHT_CYAN}${BOLD}│${NC} ${GEAR} ${ORANGE}2${NC} ${ARROW_RIGHT} ${ORANGE}IB Paper Trading${NC}                                 ${LIGHT_CYAN}${BOLD}│${NC}"
-    echo -e "${LIGHT_CYAN}${BOLD}│${NC}     ${GRAY}${DIM}Interactive Brokers paper account${NC}                 ${LIGHT_CYAN}${BOLD}│${NC}"
+    echo -e "${LIGHT_CYAN}${BOLD}│${NC}     ${GRAY}${DIM}Interactive Brokers paper account${NC}                  ${LIGHT_CYAN}${BOLD}│${NC}"
     echo -e "${LIGHT_CYAN}${BOLD}│${NC}                                                        ${LIGHT_CYAN}${BOLD}│${NC}"
     echo -e "${LIGHT_CYAN}${BOLD}│${NC} ${WARNING} ${LIGHT_RED}3${NC} ${ARROW_RIGHT} ${LIGHT_RED}IB Live Trading${NC}                                  ${LIGHT_CYAN}${BOLD}│${NC}"
-    echo -e "${LIGHT_CYAN}${BOLD}│${NC}     ${RED}${DIM}Real money - use with extreme caution!${NC}            ${LIGHT_CYAN}${BOLD}│${NC}"
+    echo -e "${LIGHT_CYAN}${BOLD}│${NC}     ${RED}${DIM}Real money - use with extreme caution!${NC}             ${LIGHT_CYAN}${BOLD}│${NC}"
     echo -e "${LIGHT_CYAN}${BOLD}│${NC}                                                        ${LIGHT_CYAN}${BOLD}│${NC}"
-    echo -e "${LIGHT_CYAN}${BOLD}╰──────────────────────────────────────────────────────────╯${NC}"
+    echo -e "${LIGHT_CYAN}${BOLD}╰────────────────────────────────────────────────────────╯${NC}"
     echo ""
     read -p "     Enter your choice (1-3): " mode_choice
-    
+    echo -e "\n"
+    echo -e "\n"
     case $mode_choice in
         1)
             echo -e "\n${SHIELD}${LIGHT_GREEN}${BOLD} LAUNCHING SIMULATION MODE ${NC}"
@@ -453,7 +469,7 @@ if [ "$start" == "y" ] || [ "$start" == "Y" ]; then
             echo -e "${LIGHT_GREEN}${BOLD}│${NC} ${CHECKMARK} No real money at risk                                ${LIGHT_GREEN}${BOLD}│${NC}"
             echo -e "${LIGHT_GREEN}${BOLD}│${NC} ${CHART} Perfect for testing strategies                       ${LIGHT_GREEN}${BOLD}│${NC}"
             echo -e "${LIGHT_GREEN}${BOLD}│${NC}                                                        ${LIGHT_GREEN}${BOLD}│${NC}"
-            echo -e "${LIGHT_GREEN}${BOLD}╰──────────────────────────────────────────────────────────╯${NC}"
+            echo -e "${LIGHT_GREEN}${BOLD}╰────────────────────────────────────────────────────────╯${NC}"
             
             show_progress 2 "${GEAR} Configuring simulation parameters"
             # Update config.json with ticker, semantic_name, mode and time_interval
@@ -470,13 +486,15 @@ if [ "$start" == "y" ] || [ "$start" == "Y" ]; then
         2)
             echo -e "\n${GEAR}${ORANGE}${BOLD} LAUNCHING IB PAPER TRADING ${NC}"
             echo -e "${ORANGE}${BOLD}╭─────────── Interactive Brokers Connection ─────────────╮${NC}"
-            echo -e "${ORANGE}${BOLD}│${NC}                                                      ${ORANGE}${BOLD}│${NC}"
-            echo -e "${ORANGE}${BOLD}│${NC} ${LIGHTNING} Testing IB Gateway connection...              ${ORANGE}${BOLD}│${NC}"
-            echo -e "${ORANGE}${BOLD}│${NC} ${SHIELD} Paper trading account - no real money risk    ${ORANGE}${BOLD}│${NC}"
-            echo -e "${ORANGE}${BOLD}│${NC}                                                      ${ORANGE}${BOLD}│${NC}"
-            echo -e "${ORANGE}${BOLD}╰──────────────────────────────────────────────────────────╯${NC}"
+            echo -e "${ORANGE}${BOLD}│${NC}                                                       ${ORANGE}${BOLD}│${NC}"
+            echo -e "${ORANGE}${BOLD}│${NC} ${LIGHTNING} Testing IB Gateway connection...                    ${ORANGE}${BOLD}│${NC}"
+            echo -e "${ORANGE}${BOLD}│${NC} ${SHIELD} Paper trading account - no real money risk          ${ORANGE}${BOLD}│${NC}"
+            echo -e "${ORANGE}${BOLD}│${NC}                                                       ${ORANGE}${BOLD}│${NC}"
+            echo -e "${ORANGE}${BOLD}╰────────────────────────────────────────────────────────╯${NC}"
             
             show_progress 2 "${GEAR} Configuring IB paper parameters"
+            echo -e "\n"
+            echo -e "\n"
             # Update config.json with ticker, semantic_name, mode and time_interval
             jq --arg ticker "$ticker" --arg semantic_name "$semantic_name" --arg mode "ib_paper" --arg interval "$interval_value" \
                 '.target_stock = $ticker | .semantic_name = $semantic_name | .trading_mode = $mode | .time_interval = $interval' \
@@ -495,13 +513,13 @@ if [ "$start" == "y" ] || [ "$start" == "Y" ]; then
             else
                 echo -e "\n${CROSS}${RED}${BOLD} IB CONNECTION FAILED ${NC}"
                 echo -e "${RED}${BOLD}╭─────────────── Connection Troubleshooting ──────────────╮${NC}"
-                echo -e "${RED}${BOLD}│${NC}                                                       ${RED}${BOLD}│${NC}"
-                echo -e "${RED}${BOLD}│${NC} ${WARNING} ${YELLOW}Please verify the following:${NC}                  ${RED}${BOLD}│${NC}"
-                echo -e "${RED}${BOLD}│${NC}   ${GRAY}• IB Gateway or TWS is running${NC}                 ${RED}${BOLD}│${NC}"
-                echo -e "${RED}${BOLD}│${NC}   ${GRAY}• API is enabled in IB settings${NC}               ${RED}${BOLD}│${NC}"
-                echo -e "${RED}${BOLD}│${NC}   ${GRAY}• Paper trading port 7496 is configured${NC}       ${RED}${BOLD}│${NC}"
-                echo -e "${RED}${BOLD}│${NC}                                                       ${RED}${BOLD}│${NC}"
-                echo -e "${RED}${BOLD}╰───────────────────────────────────────────────────────────╯${NC}"
+                echo -e "${RED}${BOLD}│${NC}                                                        ${RED}${BOLD}│${NC}"
+                echo -e "${RED}${BOLD}│${NC} ${WARNING} ${YELLOW}Please verify the following:${NC}                          ${RED}${BOLD}│${NC}"
+                echo -e "${RED}${BOLD}│${NC}   ${GRAY}• IB Gateway or TWS is running${NC}                        ${RED}${BOLD}│${NC}"
+                echo -e "${RED}${BOLD}│${NC}   ${GRAY}• API is enabled in IB settings${NC}                       ${RED}${BOLD}│${NC}"
+                echo -e "${RED}${BOLD}│${NC}   ${GRAY}• Paper trading port 7496 is configured${NC}               ${RED}${BOLD}│${NC}"
+                echo -e "${RED}${BOLD}│${NC}                                                        ${RED}${BOLD}│${NC}"
+                echo -e "${RED}${BOLD}╰─────────────────────────────────────────────────────────╯${NC}"
                 
                 show_progress 2 "${GEAR} Switching to simulation mode"
                 echo -e "\n${SHIELD}${YELLOW}${BOLD} FALLBACK: SIMULATION MODE ACTIVE ${NC}"
