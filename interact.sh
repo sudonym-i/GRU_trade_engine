@@ -135,14 +135,23 @@ gradient_text() {
 # Clear screen for better presentation
 clear
 
-# Modern animated header
+# ASCII Art Header
 echo -e "\n"
-echo -e "${PRIMARY}${BOLD}    ╭───────────────────────────────────────────────╮${NC}"
-echo -e "${PRIMARY}${BOLD}    ║${NC}                                               ${PRIMARY}${BOLD}║${NC}"
-echo -e "${PRIMARY}${BOLD}    ║${NC}        ${SECONDARY}${BOLD}Neural Trade Engine${NC}                    ${PRIMARY}${BOLD}║${NC}"
-echo -e "${PRIMARY}${BOLD}    ║${NC}           ${DIM_TEXT}AI-Powered Trading System${NC}           ${PRIMARY}${BOLD}║${NC}"
-echo -e "${PRIMARY}${BOLD}    ║${NC}                                               ${PRIMARY}${BOLD}║${NC}"
-echo -e "${PRIMARY}${BOLD}    ╰───────────────────────────────────────────────╯${NC}"
+echo -e "${PRIMARY}${BOLD}    ███╗   ██╗███████╗██╗   ██╗██████╗  █████╗ ██╗         ${NC}"
+echo -e "${PRIMARY}${BOLD}    ████╗  ██║██╔════╝██║   ██║██╔══██╗██╔══██╗██║         ${NC}"
+echo -e "${PRIMARY}${BOLD}    ██╔██╗ ██║█████╗  ██║   ██║██████╔╝███████║██║         ${NC}"
+echo -e "${PRIMARY}${BOLD}    ██║╚██╗██║██╔══╝  ██║   ██║██╔══██╗██╔══██║██║         ${NC}"
+echo -e "${PRIMARY}${BOLD}    ██║ ╚████║███████╗╚██████╔╝██║  ██║██║  ██║███████╗    ${NC}"
+echo -e "${PRIMARY}${BOLD}    ╚═╝  ╚═══╝╚══════╝ ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝    ${NC}"
+echo -e "\n"
+echo -e "${SECONDARY}${BOLD}████████╗██████╗  █████╗ ██████╗ ███████╗    ███████╗███╗   ██╗ ██████╗ ██╗███╗   ██╗███████╗${NC}"
+echo -e "${SECONDARY}${BOLD}╚══██╔══╝██╔══██╗██╔══██╗██╔══██╗██╔════╝    ██╔════╝████╗  ██║██╔════╝ ██║████╗  ██║██╔════╝${NC}"
+echo -e "${SECONDARY}${BOLD}   ██║   ██████╔╝███████║██║  ██║█████╗      █████╗  ██╔██╗ ██║██║  ███╗██║██╔██╗ ██║█████╗  ${NC}"
+echo -e "${SECONDARY}${BOLD}   ██║   ██╔══██╗██╔══██║██║  ██║██╔══╝      ██╔══╝  ██║╚██╗██║██║   ██║██║██║╚██╗██║██╔══╝  ${NC}"
+echo -e "${SECONDARY}${BOLD}   ██║   ██║  ██║██║  ██║██████╔╝███████╗    ███████╗██║ ╚████║╚██████╔╝██║██║ ╚████║███████╗${NC}"
+echo -e "${SECONDARY}${BOLD}   ╚═╝   ╚═╝  ╚═╝╚═╝  ╚═╝╚═════╝ ╚══════╝    ╚══════╝╚═╝  ╚═══╝ ╚═════╝ ╚═╝╚═╝  ╚═══╝╚══════╝${NC}"
+echo -e "\n"
+echo -e "${DIM_TEXT}                                      AI-Powered Trading System                                     ${NC}"
 echo -e "\n"
 
 # Animated initialization message
