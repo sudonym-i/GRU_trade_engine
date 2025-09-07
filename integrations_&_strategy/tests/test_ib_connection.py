@@ -48,8 +48,8 @@ async def test_ib_connection(mode: str = 'paper', host: str = '127.0.0.1', clien
             logger.info("1. Make sure TWS or IB Gateway is running")
             logger.info("2. Check that API is enabled in TWS settings")
             logger.info("3. Verify the correct port is configured:")
-            logger.info(f"   - Paper trading: port 7496")
-            logger.info(f"   - Live trading: port 7497")
+            logger.info(f"   - Paper trading: port 7497")
+            logger.info(f"   - Live trading: port 7496")
             logger.info("4. Ensure firewall allows connection to the port")
             return False
         

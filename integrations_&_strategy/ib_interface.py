@@ -26,8 +26,8 @@ class IBTradingInterface:
     
     # Standard IB port configurations
     PORTS = {
-        'paper': 7496,    # IB paper trading port
-        'live': 7497      # IB live trading port
+        'paper': 7497,    # IB paper trading port
+        'live': 7496      # IB live trading port
     }
     
     def __init__(self, mode: str = 'paper', host: str = '127.0.0.1', client_id: int = 1):
