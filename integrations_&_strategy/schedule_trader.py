@@ -17,10 +17,13 @@ import time
 import json
 import logging
 import argparse
+import asyncio
 from datetime import datetime, time as dt_time
 from pathlib import Path
 from apscheduler.schedulers.blocking import BlockingScheduler
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
+from apscheduler.triggers.interval import IntervalTrigger
 from apscheduler.events import EVENT_JOB_EXECUTED, EVENT_JOB_ERROR
 
 # Import the automated trader
@@ -51,7 +54,11 @@ class TradingScheduler:
             config_path: Path to configuration file
         """
         self.config_path = config_path
-        self.scheduler = BlockingScheduler()
+        self.config = self._load_config()
+        self.time_interval = self.config.get('time_interval', '1d')
+        
+        # Use AsyncIOScheduler for async support
+        self.scheduler = AsyncIOScheduler()
         self.scheduler.add_listener(self.job_listener, EVENT_JOB_EXECUTED | EVENT_JOB_ERROR)
     
     def job_listener(self, event):
@@ -61,52 +68,125 @@ class TradingScheduler:
         else:
             logger.info(f"Job executed successfully: {event.job_id}")
     
-    def run_daily_trading(self):
-        """Execute daily trading cycle."""
+    def _load_config(self):
+        """Load configuration from file."""
+        config_path = self.config_path or 'config.json'
+        if not os.path.isabs(config_path):
+            config_path = os.path.join(os.path.dirname(__file__), config_path)
+        
         try:
-            logger.info("Starting scheduled daily trading cycle...")
+            with open(config_path, 'r') as f:
+                return json.load(f)
+        except Exception as e:
+            logger.warning(f"Failed to load config: {e}. Using defaults.")
+            return {'time_interval': '1d'}
+    
+    async def run_trading_cycle(self):
+        """Execute trading cycle (renamed from run_daily_trading for flexibility)."""
+        try:
+            logger.info(f"Starting scheduled trading cycle (interval: {self.time_interval})...")
             
-            # Check if it's a weekday (Monday=0, Sunday=6)
-            today = datetime.now()
-            if today.weekday() >= 5:  # Saturday or Sunday
-                logger.info("Market is closed (weekend), skipping trading")
-                return
+            # For daily intervals, check if it's a weekday
+            if self.time_interval == '1d':
+                today = datetime.now()
+                if today.weekday() >= 5:  # Saturday or Sunday
+                    logger.info("Market is closed (weekend), skipping trading")
+                    return
+            
+            # For high-frequency intervals, check market hours
+            if self.time_interval in ['5min', '15min', '30min', '1hr']:
+                if not self._is_market_hours():
+                    logger.info(f"Outside market hours, skipping {self.time_interval} trading cycle")
+                    return
             
             # Initialize and run trader
             trader = AutomatedTrader(self.config_path)
-            trader.run_daily_cycle()
+            await trader.run_daily_cycle()
             
-            logger.info("Scheduled daily trading cycle completed successfully")
+            logger.info("Scheduled trading cycle completed successfully")
             
         except Exception as e:
             logger.error(f"Scheduled trading cycle failed: {e}")
             raise
     
-    def setup_daily_schedule(self, run_time: str = "17:00"):
+    def setup_dynamic_schedule(self):
         """
-        Set up daily trading schedule.
+        Set up trading schedule based on time_interval from config.
+        """
+        interval = self.time_interval.lower()
+        
+        if interval == '1d':
+            # Daily trading at market close
+            self.scheduler.add_job(
+                func=self.run_trading_cycle,
+                trigger=CronTrigger(
+                    hour=17,
+                    minute=0,
+                    day_of_week='mon-fri'
+                ),
+                id='trading_cycle',
+                name='Daily Trading Cycle',
+                replace_existing=True
+            )
+            logger.info("Scheduled daily trading for 17:00 (Monday-Friday)")
+            
+        elif interval == '1hr':
+            # Hourly trading during market hours (9:30 AM - 4:00 PM ET)
+            self.scheduler.add_job(
+                func=self.run_trading_cycle,
+                trigger=CronTrigger(
+                    minute=0,
+                    hour='9-15',  # 9 AM to 3 PM (last hour starts at 3 PM)
+                    day_of_week='mon-fri'
+                ),
+                id='trading_cycle',
+                name='Hourly Trading Cycle',
+                replace_existing=True
+            )
+            logger.info("Scheduled hourly trading (9 AM - 4 PM, Monday-Friday)")
+            
+        elif interval in ['5min', '15min', '30min']:
+            # High-frequency trading during market hours
+            minutes = int(interval.replace('min', ''))
+            
+            self.scheduler.add_job(
+                func=self.run_trading_cycle,
+                trigger=IntervalTrigger(minutes=minutes),
+                id='trading_cycle',
+                name=f'{interval.title()} Trading Cycle',
+                replace_existing=True
+            )
+            
+            # For high-frequency, also add market hours constraint via job check
+            logger.info(f"Scheduled {interval} trading (continuous during market hours, Monday-Friday)")
+            
+        else:
+            logger.warning(f"Unknown interval '{interval}', defaulting to daily")
+            self.setup_daily_schedule_fallback()
+    
+    def setup_daily_schedule_fallback(self, run_time: str = "17:00"):
+        """
+        Fallback to daily trading schedule.
         
         Args:
             run_time: Time to run daily trading (HH:MM format)
         """
         hour, minute = map(int, run_time.split(':'))
         
-        # Schedule daily trading (Monday-Friday at specified time)
         self.scheduler.add_job(
-            func=self.run_daily_trading,
+            func=self.run_trading_cycle,
             trigger=CronTrigger(
                 hour=hour,
                 minute=minute,
                 day_of_week='mon-fri'
             ),
-            id='daily_trading',
-            name='Daily Trading Cycle',
+            id='trading_cycle',
+            name='Daily Trading Cycle (Fallback)',
             replace_existing=True
         )
-        
-        logger.info(f"Scheduled daily trading for {run_time} (Monday-Friday)")
+        logger.info(f"Scheduled daily trading for {run_time} (Monday-Friday) - fallback")
     
-    def setup_weekly_retraining(self, run_time: str = "18:00"):
+    def setup_weekly_retraining(self, run_time: str = "20:00"):
         """
         Set up weekly model retraining schedule.
         
@@ -171,19 +251,40 @@ class TradingScheduler:
             logger.error(f"Weekly retraining failed: {e}")
             raise
     
-    def start_scheduler(self):
+    def _is_market_hours(self):
+        """Check if current time is during market hours (9:30 AM - 4:00 PM ET, Mon-Fri)."""
+        now = datetime.now()
+        
+        # Check if it's a weekday
+        if now.weekday() >= 5:  # Saturday or Sunday
+            return False
+        
+        # Check if it's during market hours (9:30 AM - 4:00 PM)
+        market_open = now.replace(hour=9, minute=30, second=0, microsecond=0)
+        market_close = now.replace(hour=16, minute=0, second=0, microsecond=0)
+        
+        return market_open <= now <= market_close
+    
+    async def start_scheduler(self):
         """Start the scheduler."""
         try:
-            logger.info("Starting trading scheduler...")
+            logger.info(f"Starting trading scheduler with {self.time_interval} intervals...")
             
-            # Set up schedules
-            self.setup_daily_schedule("17:00")  # 5 PM daily trading
-            self.setup_weekly_retraining("20:00")  # 8 PM Sunday retraining
+            # Set up dynamic schedule based on time interval
+            self.setup_dynamic_schedule()
+            
+            # Set up weekly retraining (only for daily intervals)
+            if self.time_interval == '1d':
+                self.setup_weekly_retraining("20:00")
             
             # Start scheduler
             logger.info("Scheduler started. Press Ctrl+C to stop.")
             self.scheduler.start()
             
+            # Keep the event loop running
+            while True:
+                await asyncio.sleep(1)
+                
         except KeyboardInterrupt:
             logger.info("Scheduler stopped by user")
             self.scheduler.shutdown()
@@ -247,7 +348,7 @@ def main():
     
     if args.start:
         scheduler = TradingScheduler(config_path)
-        scheduler.start_scheduler()
+        asyncio.run(scheduler.start_scheduler())
     
     elif args.status:
         scheduler = TradingScheduler(config_path)
@@ -258,11 +359,14 @@ def main():
         print("To stop the scheduler, press Ctrl+C in the running terminal")
     
     elif args.test:
-        logger.info("Running test trading cycle...")
-        trader = AutomatedTrader(config_path)
-        target_stock = args.stock.upper() if args.stock else None
-        trader.run_daily_cycle(target_stock)
-        logger.info("Test trading cycle completed")
+        async def run_test():
+            logger.info("Running test trading cycle...")
+            trader = AutomatedTrader(config_path)
+            target_stock = args.stock.upper() if args.stock else None
+            await trader.run_daily_cycle(target_stock)
+            logger.info("Test trading cycle completed")
+        
+        asyncio.run(run_test())
 
 
 if __name__ == "__main__":

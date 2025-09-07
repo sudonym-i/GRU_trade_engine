@@ -120,7 +120,8 @@ def cmd_train(args):
             model_type=args.model_type,
             epochs=args.epochs,
             batch_size=args.batch_size,
-            learning_rate=args.learning_rate
+            learning_rate=args.learning_rate,
+            interval=args.interval
         )
         
         print(f"\n{Colors.green('SUCCESS:')} Training completed successfully!")
@@ -202,7 +203,8 @@ def cmd_predict(args):
         result = predict_price(
             ticker=args.ticker,
             model_path=model_path,
-            include_confidence=args.confidence
+            include_confidence=args.confidence,
+            interval=args.interval
         )
         
         # Calculate price change
@@ -356,6 +358,8 @@ def main():
                              help='Batch size')
     train_parser.add_argument('--learning-rate', type=float, default=1e-3,
                              help='Learning rate')
+    train_parser.add_argument('--interval', type=str, 
+                             help='Data interval (e.g., 1d, 1h, 5m). Uses config.json if not specified')
     
     # Predict command
     predict_parser = subparsers.add_parser('predict', help='Predict stock price')
@@ -365,6 +369,8 @@ def main():
                                help='Model file path (uses latest if not specified)')
     predict_parser.add_argument('--confidence', action='store_true',
                                help='Include confidence intervals')
+    predict_parser.add_argument('--interval', type=str,
+                               help='Data interval (e.g., 1d, 1h, 5m). Uses config.json if not specified')
     
     # Web scraping command
     webscrape_parser = subparsers.add_parser('webscrape', help='Scrape web data for sentiment analysis')

@@ -232,13 +232,9 @@ class AutomatedTrader:
             webscrape_name = self.semantic_name if self.semantic_name else ticker
             logger.info(f"Running webscraping for {ticker} (using semantic name: {webscrape_name})...")
             
-            # Get time interval from config (in case webscraping needs it for frequency)
-            time_interval = self.config.get('time_interval', '1d')
-            
             cmd = [
                 'python3', 'main.py', 'webscrape', 
-                '--ticker', webscrape_name,
-                '--interval', time_interval
+                '--ticker', webscrape_name
             ]
             
             result = subprocess.run(

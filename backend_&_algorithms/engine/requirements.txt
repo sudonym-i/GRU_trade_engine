@@ -73,3 +73,7 @@ apscheduler>=3.10.0             # Background job scheduling
 # optuna>=3.0.0                  # Hyperparameter optimization
 # mlflow>=2.0.0                  # ML lifecycle management
 # tensorboard>=2.10.0            # TensorBoard for experiment tracking
+
+# Requirements for Automated Trading Integration
+apscheduler>=3.10.0  # Job scheduling for automated trading
+ib-insync>=0.9.86    # Interactive Brokers API integration
