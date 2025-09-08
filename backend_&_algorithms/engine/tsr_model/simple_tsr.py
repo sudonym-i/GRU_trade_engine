@@ -3,8 +3,10 @@
 import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
-from typing import Optional, Dict, Tuple
+from typing import Optional, Dict, Tuple, List
 import logging
+import os
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
@@ -45,7 +47,7 @@ def add_indicators(df: pd.DataFrame) -> pd.DataFrame:
     
     return df.dropna()
 
-def predict_price(ticker: str, days_ahead: int = 1) -> Dict:
+def predict_price(ticker: str, days_ahead: int = 1, model_path: str = None, include_confidence: bool = False, interval: str = None) -> Dict:
     """Simple price prediction using linear trend."""
     try:
         df = get_stock_data(ticker)
@@ -74,7 +76,7 @@ def predict_price(ticker: str, days_ahead: int = 1) -> Dict:
         else:
             signal = "HOLD"
         
-        return {
+        result = {
             "ticker": ticker,
             "current_price": float(current_price),
             "predicted_price": float(predicted_price),
@@ -83,8 +85,24 @@ def predict_price(ticker: str, days_ahead: int = 1) -> Dict:
             "rsi": float(latest_rsi),
             "sma_10": float(latest_sma_10),
             "sma_20": float(latest_sma_20),
-            "trend_slope": float(trend[0])
+            "trend_slope": float(trend[0]),
+            "prediction_date": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         }
+        
+        # Add confidence interval if requested
+        if include_confidence:
+            # Simple confidence interval based on recent price volatility
+            price_std = df['Close'].tail(20).pct_change().std() * current_price
+            confidence_margin = 1.96 * price_std  # 95% confidence interval
+            result.update({
+                "confidence_interval": [
+                    float(predicted_price - confidence_margin), 
+                    float(predicted_price + confidence_margin)
+                ],
+                "uncertainty": abs(confidence_margin / predicted_price) if predicted_price != 0 else 0.0
+            })
+        
+        return result
         
     except Exception as e:
         return {"error": str(e)}
@@ -118,3 +136,31 @@ def get_model_info(ticker: str = None) -> Dict:
         "supported_tickers": "Any",
         "prediction_horizon": "1-30 days"
     }
+
+def list_available_models() -> List[Dict]:
+    """List all available trained models."""
+    models = []
+    
+    # Get the models directory relative to the current file
+    current_dir = Path(__file__).parent
+    models_dir = current_dir.parent.parent / "models"
+    
+    if not models_dir.exists():
+        return models
+    
+    # Look for .pth files in models directory
+    for model_file in models_dir.glob("*.pth"):
+        try:
+            stat = model_file.stat()
+            models.append({
+                "file_path": str(model_file),
+                "name": model_file.name,
+                "size": f"{stat.st_size / 1024:.1f} KB",
+                "modified": datetime.fromtimestamp(stat.st_mtime).strftime("%Y-%m-%d %H:%M:%S")
+            })
+        except Exception as e:
+            logger.warning(f"Error reading model file {model_file}: {e}")
+    
+    # Sort by modification time (newest first)
+    models.sort(key=lambda x: x["modified"], reverse=True)
+    return models
