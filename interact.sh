@@ -137,12 +137,12 @@ clear
 
 # ASCII Art Header
 echo -e "\n"
-echo -e "${PRIMARY}${BOLD}    ███╗   ██╗███████╗██╗   ██╗██████╗  █████╗ ██╗         ${NC}"
-echo -e "${PRIMARY}${BOLD}    ████╗  ██║██╔════╝██║   ██║██╔══██╗██╔══██╗██║         ${NC}"
-echo -e "${PRIMARY}${BOLD}    ██╔██╗ ██║█████╗  ██║   ██║██████╔╝███████║██║         ${NC}"
-echo -e "${PRIMARY}${BOLD}    ██║╚██╗██║██╔══╝  ██║   ██║██╔══██╗██╔══██║██║         ${NC}"
-echo -e "${PRIMARY}${BOLD}    ██║ ╚████║███████╗╚██████╔╝██║  ██║██║  ██║███████╗    ${NC}"
-echo -e "${PRIMARY}${BOLD}    ╚═╝  ╚═══╝╚══════╝ ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝    ${NC}"
+echo -e "${PRIMARY}${BOLD}     ██████╗ ██████╗ ██╗   ██╗    ${NC}"
+echo -e "${PRIMARY}${BOLD}    ██╔════╝ ██╔══██╗██║   ██║    ${NC}"
+echo -e "${PRIMARY}${BOLD}    ██║  ███╗██████╔╝██║   ██║    ${NC}"
+echo -e "${PRIMARY}${BOLD}    ██║   ██║██╔══██╗██║   ██║    ${NC}"
+echo -e "${PRIMARY}${BOLD}    ╚██████╔╝██║  ██║╚██████╔╝    ${NC}"
+echo -e "${PRIMARY}${BOLD}     ╚═════╝ ╚═╝  ╚═╝ ╚═════╝     ${NC}"
 echo -e "\n"
 echo -e "${SECONDARY}${BOLD}████████╗██████╗  █████╗ ██████╗ ███████╗    ███████╗███╗   ██╗ ██████╗ ██╗███╗   ██╗███████╗${NC}"
 echo -e "${SECONDARY}${BOLD}╚══██╔══╝██╔══██╗██╔══██╗██╔══██╗██╔════╝    ██╔════╝████╗  ██║██╔════╝ ██║████╗  ██║██╔════╝${NC}"
@@ -452,6 +452,7 @@ echo -e "${LIGHT_GREEN}${BOLD}╰───────────────�
 read -p "     Start algorithm scheduling? (y/n): " start
 
 if [ "$start" == "y" ] || [ "$start" == "Y" ]; then
+<<<<<<< HEAD
     echo -e "\n${ROCKET}${LIGHT_GREEN}${BOLD} Launching trading engine...${NC}\n"
     show_progress 2 "${GEAR} Finalizing setup"
     show_progress 3 "${ROCKET} Starting trading bot"
@@ -468,6 +469,174 @@ if [ "$start" == "y" ] || [ "$start" == "Y" ]; then
     echo -e "${GREEN}${BOLD}│${NC} ${CHECKMARK} Monitoring markets and executing trades                ${GREEN}${BOLD}│${NC}"
     echo -e "${GREEN}${BOLD}│${NC} ${CHECKMARK} Notifications enabled for trade alerts                 ${GREEN}${BOLD}│${NC}"
     echo -e "${GREEN}${BOLD}╰────────────────────────────────────────────────────────╯${NC}"
+=======
+    echo ""
+    echo -e "${DOLLAR}${LIGHT_CYAN}${BOLD} TRADING MODE SELECTION ${NC}"
+    echo -e "${LIGHT_CYAN}${BOLD}╭──────────────── Choose Trading Mode ───────────────────╮${NC}"
+    echo -e "${LIGHT_CYAN}${BOLD}│${NC}                                                        ${LIGHT_CYAN}${BOLD}│${NC}"
+    echo -e "${LIGHT_CYAN}${BOLD}│${NC} ${SHIELD} ${LIGHT_GREEN}1${NC} ${ARROW_RIGHT} ${LIGHT_GREEN}Simulation Mode${NC}                                  ${LIGHT_CYAN}${BOLD}│${NC}"
+    echo -e "${LIGHT_CYAN}${BOLD}│${NC}     ${GRAY}${DIM}Paper trading - safe testing environment${NC}           ${LIGHT_CYAN}${BOLD}│${NC}"
+    echo -e "${LIGHT_CYAN}${BOLD}│${NC}                                                        ${LIGHT_CYAN}${BOLD}│${NC}"
+    echo -e "${LIGHT_CYAN}${BOLD}│${NC} ${GEAR} ${ORANGE}2${NC} ${ARROW_RIGHT} ${ORANGE}IB Paper Trading${NC}                                 ${LIGHT_CYAN}${BOLD}│${NC}"
+    echo -e "${LIGHT_CYAN}${BOLD}│${NC}     ${GRAY}${DIM}Interactive Brokers paper account${NC}                  ${LIGHT_CYAN}${BOLD}│${NC}"
+    echo -e "${LIGHT_CYAN}${BOLD}│${NC}                                                        ${LIGHT_CYAN}${BOLD}│${NC}"
+    echo -e "${LIGHT_CYAN}${BOLD}│${NC} ${WARNING} ${LIGHT_RED}3${NC} ${ARROW_RIGHT} ${LIGHT_RED}IB Live Trading${NC}                                  ${LIGHT_CYAN}${BOLD}│${NC}"
+    echo -e "${LIGHT_CYAN}${BOLD}│${NC}     ${RED}${DIM}Real money - use with extreme caution!${NC}             ${LIGHT_CYAN}${BOLD}│${NC}"
+    echo -e "${LIGHT_CYAN}${BOLD}│${NC}                                                        ${LIGHT_CYAN}${BOLD}│${NC}"
+    echo -e "${LIGHT_CYAN}${BOLD}╰────────────────────────────────────────────────────────╯${NC}"
+    echo ""
+    read -p "     Enter your choice (1-3): " mode_choice
+    echo -e "\n"
+    echo -e "\n"
+    case $mode_choice in
+        1)
+            echo -e "\n${SHIELD}${LIGHT_GREEN}${BOLD} LAUNCHING SIMULATION MODE ${NC}"
+            echo -e "${LIGHT_GREEN}${BOLD}╭─────────────── Safe Trading Environment ───────────────╮${NC}"
+            echo -e "${LIGHT_GREEN}${BOLD}│${NC}                                                        ${LIGHT_GREEN}${BOLD}│${NC}"
+            echo -e "${LIGHT_GREEN}${BOLD}│${NC} ${DOLLAR} Virtual portfolio: ${YELLOW}\$10,000${NC} starting capital          ${LIGHT_GREEN}${BOLD}│${NC}"
+            echo -e "${LIGHT_GREEN}${BOLD}│${NC} ${CHECKMARK} No real money at risk                                ${LIGHT_GREEN}${BOLD}│${NC}"
+            echo -e "${LIGHT_GREEN}${BOLD}│${NC} ${CHART} Perfect for testing strategies                       ${LIGHT_GREEN}${BOLD}│${NC}"
+            echo -e "${LIGHT_GREEN}${BOLD}│${NC}                                                        ${LIGHT_GREEN}${BOLD}│${NC}"
+            echo -e "${LIGHT_GREEN}${BOLD}╰────────────────────────────────────────────────────────╯${NC}"
+            
+            show_progress 2 "${GEAR} Configuring simulation parameters"
+            # Update config.json with ticker, semantic_name, mode and time_interval
+            jq --arg ticker "$ticker" --arg semantic_name "$semantic_name" --arg mode "simulation" --arg interval "$interval_value" \
+                '.target_stock = $ticker | .semantic_name = $semantic_name | .trading_mode = $mode | .time_interval = $interval' \
+                config.json > config.json.tmp && mv config.json.tmp config.json
+            echo -e "${CHECKMARK} Opening configuration editor..."
+            nano config.json
+            
+            show_progress 3 "${ROCKET} Launching trading engine"
+            echo -e "\n${SPARKLES}${LIGHT_GREEN}${BOLD} SIMULATION MODE ACTIVE! ${NC}"
+            $here/.venv/bin/python3 schedule_trader.py --start
+            ;;
+        2)
+            echo -e "\n${GEAR}${ORANGE}${BOLD} LAUNCHING IB PAPER TRADING ${NC}"
+            echo -e "${ORANGE}${BOLD}╭─────────── Interactive Brokers Connection ─────────────╮${NC}"
+            echo -e "${ORANGE}${BOLD}│${NC}                                                        ${ORANGE}${BOLD}│${NC}"
+            echo -e "${ORANGE}${BOLD}│${NC} ${LIGHTNING} Testing IB Gateway connection...                     ${ORANGE}${BOLD}│${NC}"
+            echo -e "${ORANGE}${BOLD}│${NC} ${SHIELD} Paper trading account - no real money risk           ${ORANGE}${BOLD}│${NC}"
+            echo -e "${ORANGE}${BOLD}│${NC}                                                        ${ORANGE}${BOLD}│${NC}"
+            echo -e "${ORANGE}${BOLD}╰────────────────────────────────────────────────────────╯${NC}"
+            
+            show_progress 2 "${GEAR} Configuring IB paper parameters"
+            echo -e "\n"
+            echo -e "\n"
+            # Update config.json with ticker, semantic_name, mode and time_interval
+            jq --arg ticker "$ticker" --arg semantic_name "$semantic_name" --arg mode "ib_paper" --arg interval "$interval_value" \
+                '.target_stock = $ticker | .semantic_name = $semantic_name | .trading_mode = $mode | .time_interval = $interval' \
+                config.json > config.json.tmp && mv config.json.tmp config.json
+            show_progress 3 "${LIGHTNING} Testing IB connection"
+            source $here/.venv/bin/activate && $here/.venv/bin/python3 tests/test_ib_connection.py --mode paper > /dev/null 2>&1
+            if [ $? -eq 0 ]; then
+                echo -e "\n${GREEN}${BOLD}╭─ IB CONNECTION SUCCESSFUL ─────────────────────────────────╮${NC}"
+                echo -e "${GREEN}${BOLD}│${NC} ${CHECKMARK} Interactive Brokers connection established               ${GREEN}${BOLD}│${NC}"
+                echo -e "${GREEN}${BOLD}│${NC} ${CHECKMARK} Paper trading mode activated                             ${GREEN}${BOLD}│${NC}"
+                echo -e "${GREEN}${BOLD}╰────────────────────────────────────────────────────────────╯${NC}"
+                
+                show_progress 2 "${ROCKET} Launching IB paper trading"
+                echo -e "\n${SPARKLES}${ORANGE}${BOLD} IB PAPER TRADING ACTIVE! ${NC}"
+                $here/.venv/bin/python3 schedule_trader.py --start
+            else
+                echo -e "\n${CROSS}${RED}${BOLD} IB CONNECTION FAILED ${NC}"
+                echo -e "${RED}${BOLD}╭─────────────── Connection Troubleshooting ──────────────╮${NC}"
+                echo -e "${RED}${BOLD}│${NC}                                                        ${RED}${BOLD}│${NC}"
+                echo -e "${RED}${BOLD}│${NC} ${WARNING} ${YELLOW}Please verify the following:${NC}                          ${RED}${BOLD}│${NC}"
+                echo -e "${RED}${BOLD}│${NC}   ${GRAY}• IB Gateway or TWS is running${NC}                        ${RED}${BOLD}│${NC}"
+                echo -e "${RED}${BOLD}│${NC}   ${GRAY}• API is enabled in IB settings${NC}                       ${RED}${BOLD}│${NC}"
+                echo -e "${RED}${BOLD}│${NC}   ${GRAY}• Paper trading port 7497 is configured${NC}               ${RED}${BOLD}│${NC}"
+                echo -e "${RED}${BOLD}│${NC}                                                        ${RED}${BOLD}│${NC}"
+                echo -e "${RED}${BOLD}╰─────────────────────────────────────────────────────────╯${NC}"
+                
+                show_progress 2 "${GEAR} Switching to simulation mode"
+                echo -e "\n${SHIELD}${YELLOW}${BOLD} FALLBACK: SIMULATION MODE ACTIVE ${NC}"
+                # Update config back to simulation mode
+                jq --arg ticker "$ticker" --arg semantic_name "$semantic_name" --arg mode "simulation" --arg interval "$interval_value" \
+                    '.target_stock = $ticker | .semantic_name = $semantic_name | .trading_mode = $mode | .time_interval = $interval' \
+                    config.json > config.json.tmp && mv config.json.tmp config.json
+                nano config.json
+                $here/.venv/bin/python3 schedule_trader.py --start
+            fi
+            ;;
+        3)
+            echo -e "\n${WARNING}${RED}${BOLD} LIVE TRADING MODE WARNING ${NC}"
+            echo -e "${RED}${BOLD}╭═══════════════════════════════════════════════════════════╮${NC}"
+            echo -e "${RED}${BOLD}║${NC}                    ${BLINK}${RED}${BOLD}DANGER ZONE${NC}                    ${RED}${BOLD}║${NC}"
+            echo -e "${RED}${BOLD}╠═══════════════════════════════════════════════════════════╣${NC}"
+            echo -e "${RED}${BOLD}║${NC}                                                       ${RED}${BOLD}║${NC}"
+            echo -e "${RED}${BOLD}║${NC} ${DOLLAR} ${YELLOW}This will execute trades with REAL MONEY!${NC}       ${RED}${BOLD}║${NC}"
+            echo -e "${RED}${BOLD}║${NC} ${WARNING} ${YELLOW}All trades occur in your IB live account${NC}        ${RED}${BOLD}║${NC}"
+            echo -e "${RED}${BOLD}║${NC} ${CROSS} ${YELLOW}Losses can occur - trade responsibly${NC}            ${RED}${BOLD}║${NC}"
+            echo -e "${RED}${BOLD}║${NC}                                                       ${RED}${BOLD}║${NC}"
+            echo -e "${RED}${BOLD}╰═══════════════════════════════════════════════════════════╯${NC}"
+            echo ""
+            echo -e "${RED}${BOLD}╭──────────── Final Confirmation Required ──────────────╮${NC}"
+            echo -e "${RED}${BOLD}│${NC}                                                     ${RED}${BOLD}│${NC}"
+            echo -e "${RED}${BOLD}│${NC} Type 'yes' to proceed with live trading:           ${RED}${BOLD}│${NC}"
+            echo -e "${RED}${BOLD}│${NC}                                                     ${RED}${BOLD}│${NC}"
+            echo -e "${RED}${BOLD}╰─────────────────────────────────────────────────────────╯${NC}"
+            read -p "     Confirmation: " confirm
+            if [ "$confirm" == "yes" ]; then
+                echo -e "\n${LIGHTNING}${RED}${BOLD} INITIALIZING LIVE TRADING MODE ${NC}"
+                echo -e "${RED}${BOLD}╭────────────── Live Connection Setup ───────────────╮${NC}"
+                echo -e "${RED}${BOLD}│${NC}                                                  ${RED}${BOLD}│${NC}"
+                echo -e "${RED}${BOLD}│${NC} ${GEAR} Testing IB live connection...               ${RED}${BOLD}│${NC}"
+                echo -e "${RED}${BOLD}│${NC} ${DOLLAR} Preparing real money trading interface     ${RED}${BOLD}│${NC}"
+                echo -e "${RED}${BOLD}│${NC}                                                  ${RED}${BOLD}│${NC}"
+                echo -e "${RED}${BOLD}╰──────────────────────────────────────────────────────╯${NC}"
+                
+                show_progress 2 "${GEAR} Configuring live trading parameters"
+                # Update config.json with ticker, semantic_name, mode and time_interval
+                jq --arg ticker "$ticker" --arg semantic_name "$semantic_name" --arg mode "ib_live" --arg interval "$interval_value" \
+                    '.target_stock = $ticker | .semantic_name = $semantic_name | .trading_mode = $mode | .time_interval = $interval' \
+                    config.json > config.json.tmp && mv config.json.tmp config.json
+                
+                echo -e "${CHECKMARK} Opening configuration editor..."
+                nano config.json
+                
+                show_progress 3 "${LIGHTNING} Testing live IB connection"
+                source $here/.venv/bin/activate && $here/.venv/bin/python3 tests/test_ib_connection.py --mode live > /dev/null 2>&1
+                if [ $? -eq 0 ]; then
+                    echo -e "\n${GREEN}${BOLD}╭─ LIVE CONNECTION SUCCESSFUL ───────────────────────────────╮${NC}"
+                    echo -e "${GREEN}${BOLD}│${NC} ${CHECKMARK} Interactive Brokers live connection established     ${GREEN}${BOLD}│${NC}"
+                    echo -e "${GREEN}${BOLD}│${NC} ${DOLLAR} Real money trading mode activated                   ${GREEN}${BOLD}│${NC}"
+                    echo -e "${GREEN}${BOLD}│${NC} ${WARNING} Trade responsibly - losses are possible             ${GREEN}${BOLD}│${NC}"
+                    echo -e "${GREEN}${BOLD}╰────────────────────────────────────────────────────────────╯${NC}"
+                    
+                    show_progress 2 "${ROCKET} Launching live trading engine"
+                    echo -e "\n${ROCKET}${RED}${BOLD} LIVE TRADING ACTIVE - GOOD LUCK! ${NC}"
+                    $here/.venv/bin/python3 schedule_trader.py --start
+                else
+                    echo -e "\n${RED}${BOLD}✗ IB live connection test failed${NC}"
+                    echo -e "  ${YELLOW}Please check:${NC}"
+                    echo -e "    ${GRAY}• IB Gateway or TWS is running${NC}"
+                    echo -e "    ${GRAY}• API is enabled in IB settings${NC}"
+                    echo -e "    ${GRAY}• Live trading port 7496 is configured${NC}"
+                    echo -e "    ${GRAY}• You have live trading permissions${NC}"
+                    echo -e "\n${RED}${BOLD}🛑 Aborting live trading for safety${NC}"
+                fi
+            else
+                echo -e "\n${YELLOW}${BOLD}↻ Live trading cancelled. Falling back to simulation mode...${NC}"
+                # Update config.json with simulation mode
+                jq --arg ticker "$ticker" --arg semantic_name "$semantic_name" --arg mode "simulation" --arg interval "$interval_value" \
+                    '.target_stock = $ticker | .semantic_name = $semantic_name | .trading_mode = $mode | .time_interval = $interval' \
+                    config.json > config.json.tmp && mv config.json.tmp config.json
+                
+                $here/.venv/bin/python3 automated_trader.py --mode simulation --stock "$ticker" --semantic-name "$semantic_name"
+            fi
+            ;;
+        *)
+            echo -e "\n${YELLOW}${BOLD}⚠ Invalid choice. Defaulting to simulation mode...${NC}"
+            # Update config.json with ticker, semantic_name, simulation mode and time_interval
+            jq --arg ticker "$ticker" --arg semantic_name "$semantic_name" --arg mode "simulation" --arg interval "$interval_value" \
+                '.target_stock = $ticker | .semantic_name = $semantic_name | .trading_mode = $mode | .time_interval = $interval' \
+                config.json > config.json.tmp && mv config.json.tmp config.json
+            
+            $here/.venv/bin/python3 automated_trader.py --mode simulation --stock "$ticker" --semantic-name "$semantic_name"
+            ;;
+    esac
+>>>>>>> c807e2844b1877b77c0ea30b9c87ed996fb6d7bd
 else
     echo -e "\n${WARNING}${BOLD}╭─ TRADING LAUNCH ABORTED ───────────────────────────────╮${NC}"
     echo -e "${WARNING}${BOLD}│${NC} ${CROSS} Trading engine launch aborted by user                   ${WARNING}${BOLD}│${NC}"

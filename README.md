@@ -1,24 +1,24 @@
 
-# TSR Trade Engine
+# GRU Trade Engine
 
 **Status:** Needs testing
 
-**Version:** 1.0.0
+**Version:** 0.0.3 | Incomplete
 
 **Supported OS:** Linux
 
-**Hardware Requirements:** 8-9 GB of ram ( for OS + Neural_Trade_Engine), a decently fast CPU, GPU not a requirement
+**Hardware Requirements:**  | ~8 GB of ram  |  ~12 GB storage,  |  a decently fast CPU  |  GPU not a requirement
 
 ## Overview
+<img width="1884" height="1060" alt="Screenshot From 2025-09-07 12-48-11" src="https://github.com/user-attachments/assets/8d1e0ea6-ccc4-417f-a2a4-8bc4a8fef0e8" />
 
-The TSR Trade Engine is a comprehensive trading platform that provides:
+This project is based around making time series predicitons using GRU architecture. Built on this, there are:
 
-- **🧠 ML-Powered Predictions**: Main predictive power cmes from the Time Series Regression model trained on stock-price patterns
-- **📊 Multiple Trading Strategies**: Buy & Hold, Momentum, and ML-driven trading
+- **🧠 ML-Powered Predictions**: Main predictive power comes from the Time Series Regression model trained on stock-price patterns (GRU architecture)
+- **📊 Automated trading**: Using the IB trading api, this project can follow various time schedules and automatically trade based off of predictions.
 - **🤖 Automated Scheduling**: Background jobs for data collection and predictions
-- **📈 Performance Analytics**: Comprehensive metrics including Sharpe ratio and drawdown analysis
-- **😊 Sentiment Analysis**: BERT-based market sentiment from web sources (YouTube)
-- **💻 Interactive Trading**: Paper trading interface with real-time market data
+- **📈 Performance Analytics**: Comprehensive metrics including history and logs
+- **😊 Sentiment Analysis**: BERT-based market sentiment from daily web sources (YouTube transcripts - filtered to most recent)
 
 ## 📁 Project Structure
 
@@ -85,16 +85,16 @@ TSR_trade_engine/
 ```bash
 git clone https://github.com/yourusername/neural_trade_engine.git
 cd neural_trade_engine
-chmod +x automated_setup.sh
-./automated_setup.sh
+chmod +x interact.sh
+./interact.sh
 ```
 The automated setup will guide you through:
-1. **Dependency Installation**: Python packages and system requirements
-2. **Model Training**: Sentiment model training on financial datasets
-3. **Stock Selection**: Choose your target stock and semantic name
-4. **Data Collection**: Historical price data and sentiment scraping
-5. **Model Training**: TSR model training on your selected stock
-6. **Configuration**: Trading parameters and risk settings
+1. **Dependency Installation**: Python packages and system requirements & venv
+2. **Sentiment Model Training**: Sentiment model training on a twitter 1.2M labelled database
+3. **Stock Selection**: Choose your target stock and semantic name 
+4. **Data Collection**: Historical price data and web scraping
+5. **Model Training**: TSR/GRU model training on your selected stock (they are trained on a specific stock's history)
+6. **Configuration**: Trading parameters and risk settings (optional- use for modifying hyper-parameters)
 7. **Trading Mode Selection**: Choose simulation, paper, or live trading
 
 You can use this interface to get your engine actively running on your hardware, no extra steps neccesary.
@@ -103,7 +103,7 @@ You can use this interface to get your engine actively running on your hardware,
 
 ### Architectures
 
-#### Time Series Regression (TSR) Model
+#### Time Series Regression (TSR/GRU) Model
 ```
 Input Layer (50-100 features)
     ├── Price Features: OHLCV data, returns, volatility measures
@@ -125,7 +125,7 @@ Output Layer
 ```
 
 
-- **Models are Specialized**: I use a single-stock model, trained on 2+ years of data for maximum accuracy, as this has proven to perform the best.
+- **Models are Specialized**: I use a single-stock model, trained on 2+ years of data for maximum accuracy, as this has proven to perform the best in my testing.
 
 #### Sentiment Analysis Architecture
 ```
