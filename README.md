@@ -1,9 +1,9 @@
 
-# GRU Trade Engine
+# Neural Trade Advisory Engine
 
-**Status:** Needs testing
+**Status:** Active Development
 
-**Version:** 0.0.3 | Incomplete
+**Version:** 0.0.4 | Advisory System
 
 **Supported OS:** Linux
 
@@ -12,12 +12,13 @@
 ## Overview
 <img width="1884" height="1060" alt="Screenshot From 2025-09-07 12-48-11" src="https://github.com/user-attachments/assets/8d1e0ea6-ccc4-417f-a2a4-8bc4a8fef0e8" />
 
-This project is based around making time series predicitons using GRU architecture. Built on this, there are:
+This project provides intelligent trading recommendations using advanced machine learning models. The system has evolved from automated trading to a **advisory-focused approach** that empowers users with data-driven insights while maintaining full control over trading decisions.
 
-- **🧠 ML-Powered Predictions**: Main predictive power comes from the Time Series Regression model trained on stock-price patterns (GRU architecture)
-- **📊 Automated trading**: Using the IB trading api, this project can follow various time schedules and automatically trade based off of predictions.
-- **🤖 Automated Scheduling**: Background jobs for data collection and predictions
-- **📈 Performance Analytics**: Comprehensive metrics including history and logs
+Key Features:
+- **🧠 ML-Powered Predictions**: Time Series Regression model with GRU architecture trained on stock-price patterns
+- **💬 Smart Advisory Messages**: Automated recommendations advising specific buy/sell actions with reasoning
+- **🤖 Automated Scheduling**: Background jobs for continuous data collection and prediction updates
+- **📈 Performance Analytics**: Comprehensive metrics, prediction history, and accuracy tracking
 - **😊 Sentiment Analysis**: BERT-based market sentiment from daily web sources (YouTube transcripts - filtered to most recent)
 
 ## 📁 Project Structure
@@ -25,7 +26,8 @@ This project is based around making time series predicitons using GRU architectu
 ```
 TSR_trade_engine/
 ├── README.md                        # Project documentation
-├── backend_&_algorithms/            # Core ML and trading engine
+├── interact.sh                      # Interactive setup and management script
+├── backend_&_algorithms/            # Core ML and prediction engine
 │   ├── main.py                      # CLI application entry point
 │   ├── config.json                  # Configuration settings
 │   ├── install.sh                   # Installation script
@@ -64,40 +66,70 @@ TSR_trade_engine/
 │       ├── INFO.md                  # Performance documentation
 │       ├── generalizing_tsr_model/  # Generalized model results
 │       └── specialized_tsr_model/   # Specialized model results
-├── integrations_&_strategy/         # Trading automation and integration
-│   ├── automated_trader.py          # Main automated trading script
-│   ├── schedule_trader.py           # Scheduling and automation
-│   ├── config.json                  # Trading configuration
-│   ├── requirements.txt             # Integration dependencies
-│   └── README.md                    # Integration documentation
-└── automated_setup.sh               # Complete project setup script
+├── integrations/                    # Advisory system and scheduling
+│   ├── scheduler.py                 # Automated prediction scheduler
+│   ├── config.json                  # Scheduler configuration
+│   └── scheduler.log                # Scheduler activity logs
+└── .claude/                         # Claude Code project configuration
+    └── CLAUDE.md                    # Development instructions and context
 ```
 
 ## 🛠️ Installation & Setup
 
 ### Prerequisites
 - Python 3.8+
-- Interactive Brokers account and Trader Workstation (The IB app) installed. <-- This is essentially your stock-market API
+- Internet connection for data fetching and sentiment analysis
+- ~8 GB RAM for ML model training and inference
 
 ### Quick Installation & Setup
 
-**Option 1: Automated Setup (Recommended)**
+**Automated Setup (Recommended)**
 ```bash
-git clone https://github.com/yourusername/neural_trade_engine.git
-cd neural_trade_engine
+git clone https://github.com/yourusername/neural_trade_advisory_engine.git
+cd TSR_trade_engine
 chmod +x interact.sh
 ./interact.sh
 ```
-The automated setup will guide you through:
-1. **Dependency Installation**: Python packages and system requirements & venv
-2. **Sentiment Model Training**: Sentiment model training on a twitter 1.2M labelled database
-3. **Stock Selection**: Choose your target stock and semantic name 
-4. **Data Collection**: Historical price data and web scraping
-5. **Model Training**: TSR/GRU model training on your selected stock (they are trained on a specific stock's history)
-6. **Configuration**: Trading parameters and risk settings (optional- use for modifying hyper-parameters)
-7. **Trading Mode Selection**: Choose simulation, paper, or live trading
 
-You can use this interface to get your engine actively running on your hardware, no extra steps neccesary.
+The automated setup will guide you through:
+1. **Dependency Installation**: Python packages, system requirements, and virtual environment setup
+2. **Sentiment Model Training**: Train BERT-based sentiment model on labeled financial data
+3. **Stock Selection**: Choose your target stock and configure semantic name for web scraping
+4. **Data Collection**: Fetch historical price data and configure sentiment data sources
+5. **Model Training**: Train TSR/GRU model on your selected stock's historical patterns
+6. **Advisory Configuration**: Set prediction intervals and notification preferences
+7. **Scheduler Setup**: Configure automated prediction schedules and advisory message delivery
+
+The system will then run continuously, providing regular trading recommendations based on ML predictions.
+
+## 🔮 How the Advisory System Works
+
+### Advisory Workflow
+1. **Scheduled Predictions**: The scheduler runs predictions at configurable intervals (default: every 2 hours)
+2. **Data Integration**: Each prediction cycle combines:
+   - Latest price data and technical indicators
+   - Recent sentiment analysis from web sources
+   - Historical pattern recognition from trained models
+3. **Smart Recommendations**: Based on prediction confidence and market conditions:
+   - **BUY signals**: When predicted price > current price with high confidence
+   - **SELL signals**: When predicted price < current price for held positions
+   - **HOLD signals**: When confidence is low or predicted price is within normal range
+4. **Advisory Messages**: Clear, actionable recommendations with:
+   - Specific action (BUY/SELL/HOLD)
+   - Confidence level and reasoning
+   - Target price and suggested position size
+   - Risk assessment and timeline
+
+### Running the Advisory System
+```bash
+# Start the prediction scheduler
+cd integrations/
+python scheduler.py
+
+# Manual prediction (for testing)
+cd backend_&_algorithms/
+python main.py predict --ticker AAPL
+```
 
 ---
 
@@ -140,13 +172,13 @@ BERT-base-uncased (110M parameters)
 
 ### Data Pipeline & Feature Engineering
 
-#### Enhanced Real-Time Data Flow with Sentiment Integration
+#### Advisory System Data Flow
 ```
 Market Data  →  Data cleaning & normalization   →   Model Inference
                                                                 ↓
-Sentiment Scraping →  Sentiment Analysis →  Sentiment Bias → Signal Generation → Trade Execution
+Sentiment Scraping →  Sentiment Analysis →  Sentiment Bias → Advisory Generation → Recommendations
      ↑                                                            ↓
-Semantic Names (nvidia, apple, tesla, etc.)                Logging & Monitoring
+Semantic Names (nvidia, apple, tesla, etc.)                Message Delivery & Logging
 ```
 
 **Feature Engineering Pipeline:**
@@ -181,27 +213,33 @@ Semantic Names (nvidia, apple, tesla, etc.)                Logging & Monitoring
 
 ```
 
-### Trading Parameters
+### Advisory System Configuration
 ```json
 {
-  "risk_management": {
-    "max_position_size": 0.95,
-    "stop_loss_percent": 0.05,
-    "take_profit_percent": 0.10,
+  "scheduler": {
+    "ticker": "AAPL",
+    "interval": "2hr",
+    "max_runtime_minutes": 5
+  },
+  "advisory_settings": {
     "confidence_threshold": 0.65,
     "minimum_return_threshold": 0.02,
-    "sentiment_bias_strength": 0.15
+    "sentiment_bias_strength": 0.15,
+    "position_size_recommendations": true,
+    "risk_level": "moderate"
   },
-  "execution": {
-    "order_type": "market",
-    "max_slippage": 0.001,
-    "position_sizing_method": "kelly_criterion",
-    "rebalance_frequency": "daily"
+  "recommendations": {
+    "include_reasoning": true,
+    "include_confidence": true,
+    "include_risk_assessment": true,
+    "suggested_position_size": 0.05,
+    "stop_loss_percent": 0.05,
+    "take_profit_percent": 0.10
   },
   "data_sources": {
-    "price_data": "interactive_brokers",
-    "sentiment_sources": ["financial_news", "social_media"],
-    "update_frequency": "1h"
+    "sentiment_sources": ["youtube", "financial_news"],
+    "update_frequency": "daily",
+    "sentiment_days_lookback": 7
   }
 }
 ```
@@ -227,5 +265,5 @@ Contributions are welcome! Please see CONTRIBUTING.md for guidelines on:
 
 ---
 
-**⚠️ FINAL DISCLAIMER: This software is for educational and research purposes. Trading involves substantial risk of loss. The authors assume no responsibility for financial losses. Always conduct thorough testing and consider your risk tolerance before live trading.**
+**⚠️ IMPORTANT DISCLAIMER: This software provides advisory recommendations only and is for educational and research purposes. All trading decisions remain entirely with the user. Trading involves substantial risk of loss. The authors assume no responsibility for financial losses. Always conduct thorough testing, verify recommendations independently, and consider your risk tolerance before making any trading decisions. Past performance does not guarantee future results.**
 
