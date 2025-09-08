@@ -1,0 +1,18 @@
+{
+    "scheduler": {
+        "predict_interval_minutes": 120,
+        "webscrape_interval_hours": 24,
+        "ticker": "AAPL",
+        "model_path": null,
+        "confidence": true,
+        "interval": "1d"
+    },
+    "paths": {
+        "main_script": "../backend_&_algorithms/main.py",
+        "working_directory": "../backend_&_algorithms"
+    },
+    "logging": {
+        "log_file": "scheduler.log",
+        "log_level": "INFO"
+    }
+}
