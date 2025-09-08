@@ -28,12 +28,10 @@ def convert_interval_to_seconds(interval):
 def run_predict(ticker):
     """Run the predict function from main.py"""
     try:
-        # Use the virtual environment's Python interpreter
-        venv_python = "../.venv/bin/python3"
-        cmd = [venv_python, "main.py", "predict", "--ticker", ticker]
+        cmd = ["python3", "../backend_&_algorithms/main.py", "predict", "--ticker", ticker]
         print(f"Running: {' '.join(cmd)}")
         
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=300, cwd="../backend_&_algorithms")
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
         
         if result.returncode == 0:
             print("Prediction completed successfully")

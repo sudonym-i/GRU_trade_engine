@@ -1,16 +1,4 @@
-"""
-Sentiment Classification Model
+from .simple_sentiment import analyze_sentiment
+from .api import full_pipeline, pull_from_web, analyze_sentiment_text
 
-This module contains the sentiment classification model implementation
-for analyzing financial text sentiment.
-
-Author: ML Trading Bot Project
-"""
-
-__version__ = "1.0.0"
-
-# Import model components when available
-try:
-    from .model import *
-except ImportError:
-    pass
+__all__ = ['analyze_sentiment', 'full_pipeline', 'pull_from_web', 'analyze_sentiment_text']

@@ -30,8 +30,7 @@ plotly>=5.0.0                    # Interactive plotting
 
 # Financial Data APIs
 # ============================================================================
-ib_insync>=0.9.86                # Interactive Brokers API for real-time trading data
-# Note: Migrated from Yahoo Finance to Interactive Brokers for automated trading
+yfinance>=0.2.18                 # Yahoo Finance API for stock data
 
 # Data Processing & Utilities
 # ============================================================================
@@ -76,6 +75,5 @@ apscheduler>=3.10.0             # Background job scheduling
 
 # Requirements for Automated Trading Integration
 apscheduler>=3.10.0  # Job scheduling for automated trading
-ib-insync>=0.9.86    # Interactive Brokers API integration
 
 pytz
