@@ -40,18 +40,13 @@ class GRUPredictor(nn.Module):
         self.fc2 = nn.Linear(hidden_size // 2, 1)
         self.relu = nn.ReLU()
         self.dropout = nn.Dropout(dropout)
-        
-    def forward(self, x):
-        # x shape: (batch_size, sequence_length, input_size)
-        gru_out, _ = self.gru(x)
-        
-        # Use the last output of the sequence
-        last_output = gru_out[:, -1, :]
-        
-        # Pass through fully connected layers
-        out = self.relu(self.fc1(last_output))
-        out = self.dropout(out)
-        out = self.fc2(out)
-        
-        return out
 
+    def forward(self, past_series: torch.Tensor) -> torch.Tensor:
+        # x shape: (batch_size, sequence_length, input_size)
+        gru_out, _ = self.gru(past_series)
+        last_output = gru_out[:, -1, :]  # Use last time step's output
+        output = self.relu(self.fc1(last_output))
+        output = self.dropout(output)
+        output = self.fc2(output)
+    
+        return output[-1]

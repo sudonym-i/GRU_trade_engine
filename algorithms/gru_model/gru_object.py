@@ -44,7 +44,7 @@ class GRUModel:
             epochs (int): Number of training epochs.
             lr (float): Learning rate.
         """
-        train_gru_model(self.predictor, train_data, epochs, lr)
+        train_gru_model(self.predictor, train_data[:-1], train_data[-1], epochs, lr)
 
     def predict(self, input_data):
         """
