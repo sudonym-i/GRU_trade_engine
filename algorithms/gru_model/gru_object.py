@@ -2,7 +2,7 @@
 from train_gru import train_gru_model
 from gru_architecture import GRUPredictor
 from data_pipeline.formatify import format_dataframe_for_gru
-
+from .data_pipeline.yahoo_finance_data import YahooFinanceDataPuller
 
 class GRUModel:
     """
@@ -69,12 +69,11 @@ class GRUModel:
         Returns:
             Fetched stock data as a DataFrame or None if failed.
         """
-        from .data_pipeline.yahoo_finance_data import YahooFinanceDataPuller
 
         puller = YahooFinanceDataPuller()
 
         puller.data_dir = self.data_dir
-        
+
         data = puller.get_stock_data(symbol, period, interval)
 
         puller.save_to_csv(data , symbol)
