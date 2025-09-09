@@ -2,11 +2,11 @@
 #!/bin/bash
 
 # Color definitions 
-PRIMARY='\033[38;5;24m'      # Deep blue
-SECONDARY='\033[38;5;67m'    # Muted blue-gray
-ACCENT='\033[38;5;143m'      # Soft olive green
-SUCCESS='\033[38;5;29m'      # Forest green
-WARNING='\033[38;5;214m'     # Warm orange
+ACCENT='\033[38;5;24m'      # Deep blue
+SUCCESS='\033[38;5;67m'    # Muted blue-gray
+PRIMARY='\033[38;5;143m'      # Soft olive green
+WARNING='\033[38;5;29m'      # Forest green
+SECONDARY='\033[38;5;214m'     # Warm orange
 ERROR='\033[38;5;167m'       # Soft red
 INFO='\033[38;5;109m'        # Dusty blue
 SUBTLE='\033[38;5;245m'      # Medium gray

@@ -1,7 +1,6 @@
 
 import yfinance as yf
 import pandas as pd
-import datetime as dt
 
 
 class YahooFinanceDataPuller:
@@ -42,8 +41,10 @@ class YahooFinanceDataPuller:
             
         except Exception as e:
             print(f"Error fetching data for {symbol}: {str(e)}")
-    
-    
+            return pd.DataFrame({"error": str(e)})
+
+
+
     def save_to_csv(self, data: pd.DataFrame, symbol: str):
         """Save data to CSV file"""
         filename = f"{self.data_dir}/{symbol}.csv"
