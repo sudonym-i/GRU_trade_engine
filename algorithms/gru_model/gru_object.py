@@ -1,11 +1,7 @@
-from .train_gru import train_gru_model
-from .gru_architecture import GRUPredictor
-from .data_pipeline.formatify import format_data
 
-
-from .train_gru import 
-from .gru_architecture import GRUPredictor
-from .data_pipeline.formatify import format_data
+from train_gru import train_gru_model
+from gru_architecture import GRUPredictor
+from data_pipeline.formatify import format_dataframe_for_gru
 
 
 class GRUModel:
@@ -20,15 +16,13 @@ class GRUModel:
     """
     def __init__(self, input_size, hidden_size, output_size):
         """
-        Initialize the GRUModelWrapper.
 
         Args:
             input_size (int): Number of input features.
             hidden_size (int): Number of hidden units in GRU.
             output_size (int): Number of output features.
         """
-        self.model = GRUModel(input_size, hidden_size, output_size)
-        self.predictor = GRUPredictor(self.model)
+        self.predictor = GRUPredictor(input_size, hidden_size, output_size)
 
     def format_data(self, raw_data):
         """
@@ -39,7 +33,7 @@ class GRUModel:
         Returns:
             Formatted data suitable for GRU training/prediction.
         """
-        return format_data_for_gru(raw_data)
+        return format_dataframe_for_gru(raw_data)
 
     def train(self, train_data, epochs=10, lr=0.001):
         """
@@ -50,8 +44,7 @@ class GRUModel:
             epochs (int): Number of training epochs.
             lr (float): Learning rate.
         """
-        trainer = GRUTrainer(["AAPL"])
-        
+        train_gru_model(self.predictor, train_data, epochs, lr)
 
     def predict(self, input_data):
         """
@@ -62,7 +55,7 @@ class GRUModel:
         Returns:
             Model predictions.
         """
-        return self.predictor.predict(input_data)
+        return self.predictor.forward(input_data)
     
     def pull_data(self, symbol: str, period: str = "3y", interval: str = "1d"):
         """

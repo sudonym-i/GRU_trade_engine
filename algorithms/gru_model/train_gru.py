@@ -12,6 +12,7 @@ def train_gru_model(model, train_tensor, target_tensor, epochs=10, lr=0.001):
 	import torch
 	optimizer = torch.optim.Adam(model.parameters(), lr=lr)
 	criterion = torch.nn.MSELoss()
+	epochs = int(epochs)
 	for epoch in range(epochs):
 		model.train()
 		optimizer.zero_grad()
