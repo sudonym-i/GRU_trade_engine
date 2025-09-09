@@ -23,6 +23,7 @@ class GRUModel:
             output_size (int): Number of output features.
         """
         self.predictor = GRUPredictor(input_size, hidden_size, output_size)
+        self.data_dir = "./data"
 
     def format_data(self, raw_data):
         """
@@ -72,4 +73,10 @@ class GRUModel:
 
         puller = YahooFinanceDataPuller()
 
-        return puller.get_stock_data(symbol, period, interval)
+        puller.data_dir = self.data_dir
+        
+        data = puller.get_stock_data(symbol, period, interval)
+
+        puller.save_to_csv(data , symbol)
+
+        return data

@@ -1,7 +1,7 @@
 
 #!/bin/bash
 
-# Color definitions - Sophisticated complementary palette
+# Color definitions 
 PRIMARY='\033[38;5;24m'      # Deep blue
 SECONDARY='\033[38;5;67m'    # Muted blue-gray
 ACCENT='\033[38;5;143m'      # Soft olive green
@@ -16,23 +16,6 @@ HIGHLIGHT='\033[38;5;180m'   # Warm beige
 NEUTRAL='\033[38;5;252m'     # Light gray
 NC='\033[0m' # No Color
 
-# Legacy color mappings for compatibility
-RED=$ERROR
-GREEN=$SUCCESS
-YELLOW=$WARNING
-BLUE=$PRIMARY
-PURPLE=$SECONDARY
-CYAN=$INFO
-WHITE=$BRIGHT
-GRAY=$SUBTLE
-BLACK='\033[0;30m'
-LIGHT_RED=$ERROR
-LIGHT_GREEN=$ACCENT
-LIGHT_BLUE=$INFO
-LIGHT_PURPLE=$SECONDARY
-LIGHT_CYAN=$INFO
-ORANGE=$WARNING
-
 # Text formatting - Enhanced
 BOLD='\033[1m'
 UNDERLINE='\033[4m'
@@ -42,7 +25,7 @@ BLINK='\033[5m'
 REVERSE='\033[7m'
 STRIKETHROUGH='\033[9m'
 
-# Background colors for modern effects
+# Background colors
 BG_BLACK='\033[40m'
 BG_RED='\033[41m'
 BG_GREEN='\033[42m'
@@ -52,24 +35,6 @@ BG_PURPLE='\033[45m'
 BG_CYAN='\033[46m'
 BG_WHITE='\033[47m'
 
-# Modern Unicode symbols
-ARROW_RIGHT="→"
-ARROW_DOWN="↓"
-CHECKMARK="✓"
-CROSS="✗"
-WARNING="⚠"
-ROCKET="*"
-GEAR="*"
-LIGHTNING="*"
-SPARKLES="*"
-FIRE="*"
-BRAIN="*"
-CHART="*"
-DOLLAR="$"
-SHIELD="*"
-HOURGLASS="*"
-CLOCK="*"
-TARGET="*"
 
 # Progress bar function
 show_progress() {
@@ -104,33 +69,6 @@ spinner() {
     printf "\r${SUCCESS}[${CHECKMARK}] ${NEUTRAL}%s complete!${NC}\n" "$task_name"
 }
 
-# Terminal wave effect function
-wave_effect() {
-    local text="$1"
-    local colors=("${PRIMARY}" "${SECONDARY}" "${ACCENT}" "${SUCCESS}" "${INFO}" "${WARNING}" "${HIGHLIGHT}")
-    
-    for i in {1..3}; do
-        for color in "${colors[@]}"; do
-            echo -ne "\r${color}${BOLD}${text}${NC}"
-            sleep 0.1
-        done
-    done
-    echo -e "\r${INFO}${BOLD}${text}${NC}"
-}
-
-# Gradient text effect
-gradient_text() {
-    local text="$1"
-    local len=${#text}
-    local colors=("${ERROR}" "${WARNING}" "${HIGHLIGHT}" "${ACCENT}" "${INFO}" "${PRIMARY}" "${SECONDARY}")
-    local color_count=${#colors[@]}
-    
-    for ((i=0; i<len; i++)); do
-        local color_index=$((i * color_count / len))
-        echo -ne "${colors[$color_index]}${text:$i:1}"
-    done
-    echo -e "${NC}"
-}
 
 # Clear screen for better presentation
 clear

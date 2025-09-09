@@ -1,0 +1,7 @@
+{
+	"InstallScripts" : 
+	[
+		"/media/sudonym/projects/TSR_trade_engine/algorithms/sentiment_model/web_scraper/build/cmake_install.cmake"
+	],
+	"Parallel" : false
+}

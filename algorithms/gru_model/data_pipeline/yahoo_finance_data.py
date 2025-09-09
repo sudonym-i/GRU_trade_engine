@@ -32,7 +32,6 @@ class YahooFinanceDataPuller:
             
             if data.empty:
                 print(f"No data found for symbol: {symbol}")
-                return None
             
             
             # Reset index to make Date a column
@@ -43,12 +42,11 @@ class YahooFinanceDataPuller:
             
         except Exception as e:
             print(f"Error fetching data for {symbol}: {str(e)}")
-            return None
     
     
     def save_to_csv(self, data: pd.DataFrame, symbol: str):
         """Save data to CSV file"""
-        filename = f"{self.data_dir}/{symbol}_{dt.date.today().strftime('%Y%m%d')}.csv"
+        filename = f"{self.data_dir}/{symbol}.csv"
         data.to_csv(filename, index=False)
         print(f"Data saved to {filename}")
     
