@@ -28,5 +28,6 @@ def format_dataframe_for_gru(df, sequence_length=30, feature_cols=None):
         seq = data_norm[i:i+sequence_length]
         sequences.append(seq)
 
-    tensor = torch.tensor(np.array(sequences), dtype=torch.float32)
-    return tensor
+    train_tensor = torch.tensor(np.array(sequences), dtype=torch.float32)
+    target_tensor = torch.tensor(data_norm[sequence_length:, feature_cols.index('Close')], dtype=torch.float32).unsqueeze(1)
+    return train_tensor, target_tensor, scaler

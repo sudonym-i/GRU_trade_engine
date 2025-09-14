@@ -21,3 +21,5 @@ def train_gru_model(model, train_tensor, target_tensor, epochs=10, lr=0.001):
 		loss.backward()
 		optimizer.step()
 		print(f"Epoch {epoch+1}/{epochs}, Loss: {loss.item():.4f}")
+
+	return None

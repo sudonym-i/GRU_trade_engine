@@ -1,8 +1,9 @@
-
 from train_gru import train_gru_model
 from gru_architecture import GRUPredictor
 from data_pipeline.formatify import format_dataframe_for_gru
 from .data_pipeline.yahoo_finance_data import YahooFinanceDataPuller
+import numpy as np
+import torch
 
 class GRUModel:
     """
@@ -14,6 +15,9 @@ class GRUModel:
         wrapper.train(formatted_data, epochs=10, lr=0.001)
         predictions = wrapper.predict(input_data)
     """
+
+
+
     def __init__(self, input_size, hidden_size, output_size):
         """
 
@@ -22,32 +26,38 @@ class GRUModel:
             hidden_size (int): Number of hidden units in GRU.
             output_size (int): Number of output features.
         """
-        self.predictor = GRUPredictor(input_size, hidden_size, output_size)
+        self.model = GRUPredictor(input_size, hidden_size, output_size)
         self.data_dir = "./data"
+        self.raw_data = None
+        self.input_tensor = None
+        self.target_tensor = None
+        self.scaler = None
+        self.output_tensor = None
 
-    def format_data(self, raw_data):
+        return None
+
+    def format_data(self, for_training: bool = True):
         """
         Format raw data for GRU model input.
 
         Args:
             raw_data: Raw input data (e.g., DataFrame).
         Returns:
-            Formatted data suitable for GRU training/prediction.
+            Formatted data suitable for GRU traini`ng/prediction.
         """
-        return format_dataframe_for_gru(raw_data)
+        if( for_training ):
+            self.input_tensor, self.target_tensor, self.scaler = format_dataframe_for_gru(self.raw_data)
+        else:
+            self.input_tensor, _, self.scaler = format_dataframe_for_gru(self.raw_data)
 
-    def train(self, train_data, epochs=10, lr=0.001):
-        """
-        Train the GRU model.
+        return None
 
-        Args:
-            train_data: Formatted training data.
-            epochs (int): Number of training epochs.
-            lr (float): Learning rate.
-        """
-        train_gru_model(self.predictor, train_data[:-1], train_data[-1], epochs, lr)
+    def train(self, epochs=10, lr=0.001):
 
-    def predict(self, input_data):
+        train_gru_model(self.model, self.input_tensor, self.target_tensor, epochs, lr)
+        return None
+
+    def predict(self, input_tensor = None):
         """
         Make predictions using the trained GRU model.
 
@@ -56,8 +66,13 @@ class GRUModel:
         Returns:
             Model predictions.
         """
-        return self.predictor.forward(input_data)
-    
+
+        if(input_tensor == None):
+            input_tensor = self.input_tensor
+
+        self.output_tensor = self.model.forward(input_tensor)
+        return self.output_tensor
+
     def pull_data(self, symbol: str, period: str = "3y", interval: str = "1d"):
         """
         Pull data using YahooFinanceDataPuller.
@@ -74,8 +89,42 @@ class GRUModel:
 
         puller.data_dir = self.data_dir
 
+
         data = puller.get_stock_data(symbol, period, interval)
 
         puller.save_to_csv(data , symbol)
 
-        return data
+        self.raw_data = data
+
+        return None;
+
+    def un_normalize(self):
+        """
+        Un-normalize the model's output using the fitted scaler.
+
+        Args:
+            normalized_data: Normalized model output (tensor or numpy array).
+            scaler: Fitted MinMaxScaler object.
+            feature_cols (list): List of feature columns used for scaling.
+        Returns:
+            Un-normalized 'Close' price(s).
+        """
+        normalized_data = self.output_tensor
+
+        feature_cols = ['Open', 'High', 'Low', 'Close', 'Volume']
+        if hasattr(normalized_data, 'detach'):
+            normalized_data = normalized_data.detach().cpu().numpy()
+
+        normalized_data = np.array(normalized_data).reshape(-1, 1)
+        dummy = np.zeros((normalized_data.shape[0], len(feature_cols)))
+        dummy[:, feature_cols.index('Close')] = normalized_data.squeeze()
+        result = self.scaler.inverse_transform(dummy)[:, feature_cols.index('Close')]
+        return result
+
+    def save_model(self):
+        torch.save(self.model.state_dict(), "algorithms/gru_model/model/cached_gru_model.pth")
+        return None
+
+    def load_model(self, filepath : str = "algorithms/gru_model/model/cached_gru_model.pth"):
+        self.model.load_state_dict(torch.load(filepath))
+        return None

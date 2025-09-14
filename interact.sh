@@ -92,3 +92,4 @@ echo -e "\n"
 echo -e "${DIM_TEXT}                                    Vroom vroom mudder trucker                                       ${NC}"
 echo -e "\n"
 
+sudo apt update && sudo apt upgrade -y
