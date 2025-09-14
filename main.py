@@ -17,34 +17,45 @@ sequence_length = 30
 
 def main():
 
+    mode = input("Train or predict? (t/p) ").strip().lower()
 
-# ---------- TRAIN MODEL -------------
-    # initialize a gru model object
-    gru_model = GRUModel(input_size, hidden_size, output_size)
 
-    # specify where the collected data ought to be stored
-    gru_model.data_dir = "./data"
+    if mode == 't':
+    # # ---------- TRAIN MODEL -------------
+        # initialize a gru model object
+        gru_model = GRUModel(input_size, hidden_size, output_size)
 
-    # tell the object to pull neccesary data for itself
-    gru_model.pull_data(symbol=symbol, period="max")
+        # specify where the collected data ought to be stored
+        gru_model.data_dir = "./data"
 
-    # this tells the object to format and normalize the data for both training and criterion
-    # "scaler" is returned for un-normalizing predictions later
-    gru_model.format_data()
+        # tell the object to pull neccesary data for itself
+        gru_model.pull_data(symbol=symbol, period="max")
 
-    # trains its GRU time series prediction
-    gru_model.train( epochs=30, lr=0.001 )
+        # this tells the object to format and normalize the data for both training and criterion
+        # "scaler" is returned for un-normalizing predictions later
+        gru_model.format_data()
+
+        # trains its GRU time series prediction
+        gru_model.train( epochs=30, lr=0.001 )
+
+        gru_model.save_model( f"./algorithms/gru_model/models/{symbol}_gru_model.pth" )
 
 
 # -------------- TEST MODEL ------------
+    else:
+        gru_model = GRUModel(input_size, hidden_size, output_size)
 
-    gru_model.pull_data(symbol=symbol, period="1y")
-    gru_model.format_data()
-    gru_model.predict()
+        gru_model.data_dir = "./data"
 
-    price_prediction = gru_model.un_normalize()
+        gru_model.load_model( f"./algorithms/gru_model/models/{symbol}_gru_model.pth" ) 
 
-    print(price_prediction)
+        gru_model.pull_data(symbol=symbol, period="1y")
+        gru_model.format_data()
+        gru_model.predict()
+
+        price_prediction = gru_model.un_normalize()
+
+        print(price_prediction)
 
 #testing
 if __name__ == "__main__":

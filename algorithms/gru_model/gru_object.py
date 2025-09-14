@@ -121,10 +121,10 @@ class GRUModel:
         result = self.scaler.inverse_transform(dummy)[:, feature_cols.index('Close')]
         return result
 
-    def save_model(self):
-        torch.save(self.model.state_dict(), "algorithms/gru_model/model/cached_gru_model.pth")
+    def save_model(self, filepath : str = "algorithms/gru_model/models/cached_gru_model.pth"):
+        torch.save(self.model.state_dict(), filepath)
         return None
 
-    def load_model(self, filepath : str = "algorithms/gru_model/model/cached_gru_model.pth"):
+    def load_model(self, filepath : str = "algorithms/gru_model/models/cached_gru_model.pth"):
         self.model.load_state_dict(torch.load(filepath))
         return None
