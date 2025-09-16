@@ -52,10 +52,10 @@ def main():
         gru_model.format_data()
         gru_model.predict()
 
-        price_prediction = gru_model.un_normalize()
+        price_prediction = gru_model.un_normalize()[-1]
 
-        print(f"\nPredicted future closing price: {price_prediction[-1]}")
+        print(f"\nPredicted future closing price: {price_prediction}")
 
-#testingp
+#testing
 if __name__ == "__main__":
     main()

@@ -92,4 +92,30 @@ echo -e "\n"
 echo -e "${DIM_TEXT}                                    Vroom vroom mudder trucker                                       ${NC}"
 echo -e "\n"
 
-sudo apt update && sudo apt upgrade -y
+sudo apt update && sudo apt upgrade -y  > /dev/null
+
+sudo apt install -y python3-full  > /dev/null
+
+if [ -d ".venv" ]; then
+    echo ".venv directory already exists, skipping creation"
+else
+    python3 -m venv .venv
+fi
+
+source .venv/bin/activate
+
+sudo apt install -y libcurl4-openssl-dev  > /dev/null
+sudo apt install -y libfmt-dev  > /dev/null
+
+home=$(pwd)
+
+cd algorithms/sentiment_model/web_scraper/build
+
+cmake ..
+make
+
+cd $home
+
+
+pip install -r algorithms/requirements.txt  > /dev/null
+# currently bring error TO FIX, lol
