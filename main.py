@@ -6,14 +6,13 @@ from algorithms.gru_model.gru_object import GRUModel
 
 
 # ============================
-# sample data
-symbol = 'NVDA'
+# testing data
+symbol = 'MSFT'
 input_size = 5  # OHLCV
-hidden_size = 256
+hidden_size = 512
 output_size = 1
-sequence_length = 30
+sequence_length = 60
 # ============================
-
 
 def main():
 
@@ -21,7 +20,7 @@ def main():
 
 
     if mode == 't':
-    # # ---------- TRAIN MODEL -------------
+        # ---------- TRAIN MODEL -------------
         # initialize a gru model object
         gru_model = GRUModel(input_size, hidden_size, output_size)
 
@@ -29,34 +28,34 @@ def main():
         gru_model.data_dir = "./data"
 
         # tell the object to pull neccesary data for itself
-        gru_model.pull_data(symbol=symbol, period="max")
+        gru_model.pull_data(symbol=symbol, period="1y")
 
         # this tells the object to format and normalize the data for both training and criterion
         # "scaler" is returned for un-normalizing predictions later
         gru_model.format_data()
 
         # trains its GRU time series prediction
-        gru_model.train( epochs=30, lr=0.001 )
+        gru_model.train( epochs=30, lr=0.001, batch_size=1 )
 
         gru_model.save_model( f"./algorithms/gru_model/models/{symbol}_gru_model.pth" )
 
 
-# -------------- TEST MODEL ------------
     else:
+        # -------------- TEST MODEL ------------
         gru_model = GRUModel(input_size, hidden_size, output_size)
 
         gru_model.data_dir = "./data"
 
         gru_model.load_model( f"./algorithms/gru_model/models/{symbol}_gru_model.pth" ) 
 
-        gru_model.pull_data(symbol=symbol, period="1y")
+        gru_model.pull_data(symbol=symbol, period="3mo")
         gru_model.format_data()
         gru_model.predict()
 
         price_prediction = gru_model.un_normalize()
 
-        print(price_prediction)
+        print(f"\nPredicted future closing price: {price_prediction[-1]}")
 
-#testing
+#testingp
 if __name__ == "__main__":
     main()

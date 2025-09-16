@@ -52,9 +52,9 @@ class GRUModel:
 
         return None
 
-    def train(self, epochs=10, lr=0.001):
+    def train(self, epochs=10, lr=0.001, batch_size=32):
 
-        train_gru_model(self.model, self.input_tensor, self.target_tensor, epochs, lr)
+        train_gru_model(self.model, self.input_tensor, self.target_tensor, epochs, lr, batch_size)
         return None
 
     def predict(self, input_tensor = None):
@@ -67,10 +67,14 @@ class GRUModel:
             Model predictions.
         """
 
-        if(input_tensor == None):
+        if input_tensor is None:
             input_tensor = self.input_tensor
 
-        self.output_tensor = self.model.forward(input_tensor)
+        self.model.eval()  # Set model to evaluation mode
+
+        with torch.no_grad():  # Disable gradient calculation for inference
+            self.output_tensor = self.model.forward(input_tensor)
+            
         return self.output_tensor
 
     def pull_data(self, symbol: str, period: str = "3y", interval: str = "1d"):
