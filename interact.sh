@@ -54,22 +54,6 @@ show_progress() {
     printf "] 100%%\n"
 }
 
-# Animated loading spinner
-spinner() {
-    local pid=$1
-    local task_name="$2"
-    local delay=0.1
-    local spinstr='|/-\'
-    while [ "$(ps a | awk '{print $1}' | grep $pid)" ]; do
-        local temp=${spinstr#?}
-        printf "\r${INFO}[%c${INFO}] ${NEUTRAL}%s...${NC}" "$spinstr" "$task_name"
-        local spinstr=$temp${spinstr%"$temp"}
-        sleep $delay
-    done
-    printf "\r${SUCCESS}[${CHECKMARK}] ${NEUTRAL}%s complete!${NC}\n" "$task_name"
-}
-
-
 # Clear screen for better presentation
 clear
 
@@ -92,30 +76,47 @@ echo -e "\n"
 echo -e "${DIM_TEXT}                                    Vroom vroom mudder trucker                                       ${NC}"
 echo -e "\n"
 
-sudo apt update && sudo apt upgrade -y  > /dev/null
+read -p "Would you like to install/update(y/n) [type 'r' to force reinstall]: " choice
 
-sudo apt install -y python3-full  > /dev/null
 
-if [ -d ".venv" ]; then
-    echo ".venv directory already exists, skipping creation"
-else
-    python3 -m venv .venv
+if [[ "$choice" == "r" || "$choice" == "R" ]]; then
+        echo -e "${WARNING}Reinstalling...${NC}"
+        yes | rm -r .venv
+        show_progress 2 "Removed existing .venv directory."
+        choice="y"
 fi
 
-source .venv/bin/activate
 
-sudo apt install -y libcurl4-openssl-dev  > /dev/null
-sudo apt install -y libfmt-dev  > /dev/null
+if [[ "$choice" == "y" || "$choice" == "Y" ]]; then
 
-home=$(pwd)
+    show_progress 2 "Checking dependencies."
 
-cd algorithms/sentiment_model/web_scraper/build
+    sudo apt update && sudo apt upgrade -y  > /dev/null 2>&1
 
-cmake ..
-make
+    sudo apt install -y python3-full  > /dev/null 2>&1
 
-cd $home
+    if [ -d ".venv" ]; then
+        echo ".venv directory already exists, skipping creation"
+    else
+        python3 -m venv .venv 
+    fi
 
+    source .venv/bin/activate
 
-pip install -r algorithms/requirements.txt  > /dev/null
-# currently bring error TO FIX, lol
+    sudo apt install -y libcurl4-openssl-dev  > /dev/null 2>&1
+    sudo apt install -y libfmt-dev  > /dev/null 2>&1
+
+    home=$(pwd)
+
+    cd algorithms/sentiment_model/web_scraper/build
+    show_progress 2 "Building c++."
+    cmake ..  > /dev/null 2>&1
+    make
+
+    cd $home
+    
+
+    pip install -r algorithms/requirements.txt  > /dev/null  2>&1
+fi
+
+read -p "Train model or run predictions on schedule (t/p): " run_choice
