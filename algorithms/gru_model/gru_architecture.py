@@ -19,13 +19,18 @@ from datetime import datetime, timedelta
 class GRUPredictor(nn.Module):
     """GRU-based neural network for stock price prediction"""
     
-    def __init__(self, input_size: int = 7, hidden_size: int = 64, num_layers: int = 2, dropout: float = 0.2):
+    def __init__(self, input_size: int = 5, hidden_size: int = 64, num_layers: int = 2, dropout: float = 0.2):
+        """
+        Args:
+            input_size (int): Number of input features (default 5 for OHLCV: Open, High, Low, Close, Volume)
+            hidden_size (int): Number of hidden units in GRU.
+            num_layers (int): Number of GRU layers.
+            dropout (float): Dropout rate.
+        """
         super(GRUPredictor, self).__init__()
-        
         self.input_size = input_size
         self.hidden_size = hidden_size
         self.num_layers = num_layers
-        
         # GRU layers
         self.gru = nn.GRU(
             input_size=input_size,
@@ -34,7 +39,6 @@ class GRUPredictor(nn.Module):
             batch_first=True,
             dropout=dropout if num_layers > 1 else 0
         )
-        
         # Fully connected layers
         self.fc1 = nn.Linear(hidden_size, hidden_size // 2)
         self.fc2 = nn.Linear(hidden_size // 2, 1)

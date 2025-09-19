@@ -54,6 +54,7 @@ def main():
 
         price_prediction = gru_model.un_normalize()[-1]
 
+        print(f"\nThe past 10 day window: \n{gru_model.raw_data['Close'].tail(10).values}")
         print(f"\nPredicted future closing price: {price_prediction}")
 
 #testing

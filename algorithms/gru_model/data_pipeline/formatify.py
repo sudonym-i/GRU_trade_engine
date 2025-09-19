@@ -14,9 +14,16 @@ def format_dataframe_for_gru(df, sequence_length=30, feature_cols=None):
     Returns:
         torch.Tensor: Normalized tensor of shape (num_samples, sequence_length, num_features)
     """
+
     if feature_cols is None:
         feature_cols = ['Open', 'High', 'Low', 'Close', 'Volume']
 
+    # Ensure 'Volume' column exists
+    if 'Volume' not in df.columns:
+        print("Warning: 'Volume' column missing in input DataFrame. Filling with zeros.")
+        df['Volume'] = 0
+
+    # Drop rows with missing values in required columns
     df = df.dropna(subset=feature_cols)
     data = df[feature_cols].values
 

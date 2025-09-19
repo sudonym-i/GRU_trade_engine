@@ -18,11 +18,10 @@ class GRUModel:
 
 
 
-    def __init__(self, input_size, hidden_size, output_size):
+    def __init__(self, input_size=5, hidden_size=64, output_size=1):
         """
-
         Args:
-            input_size (int): Number of input features.
+            input_size (int): Number of input features (default 5 for OHLCV: Open, High, Low, Close, Volume)
             hidden_size (int): Number of hidden units in GRU.
             output_size (int): Number of output features.
         """
@@ -33,7 +32,6 @@ class GRUModel:
         self.target_tensor = None
         self.scaler = None
         self.output_tensor = None
-
         return None
 
     def format_data(self, for_training: bool = True):

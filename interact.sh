@@ -82,6 +82,8 @@ read -p "Would you like to install/update(y/n) [type 'r' to force reinstall]: " 
 if [[ "$choice" == "r" || "$choice" == "R" ]]; then
         echo -e "${WARNING}Reinstalling...${NC}"
         yes | rm -r .venv
+        rm -r algorithms/sentiment_model/web_scraper/build
+        mkdir algorithms/sentiment_model/web_scraper/build
         show_progress 2 "Removed existing .venv directory."
         choice="y"
 fi
@@ -103,20 +105,34 @@ if [[ "$choice" == "y" || "$choice" == "Y" ]]; then
 
     source .venv/bin/activate
 
-    sudo apt install -y libcurl4-openssl-dev  > /dev/null 2>&1
-    sudo apt install -y libfmt-dev  > /dev/null 2>&1
+    sudo apt install -y libcurl4-openssl-dev > /dev/null 2>&1
+    sudo apt install -y libfmt-dev > /dev/null 2>&1
 
     home=$(pwd)
 
     cd algorithms/sentiment_model/web_scraper/build
     show_progress 2 "Building c++."
-    cmake ..  > /dev/null 2>&1
+    cmake ..
     make
+    chmod +x webscrape.exe
 
     cd $home
-    
 
-    pip install -r algorithms/requirements.txt  > /dev/null  2>&1
+    pip install -r algorithms/requirements.txt > /dev/null 2>&1
+else
+    echo -e "${INFO}Skipping installation...${NC}"
+    source .venv/bin/activate
 fi
 
-read -p "Train model or run predictions on schedule (t/p): " run_choice
+read -p "Test run project (y/n): " run_choice
+
+read -p "Enter stock ticker (default: NVDA): " stock_ticker
+read -p "Enter the name of this company: " semantic_name
+
+if [ "$run_choice" == "y" ] || [ "$run_choice" == "Y" ]; then
+# Find webscrape arguments, I forget
+    .$home/algorithms/sentiment_model/web_scraper/build/webscrape.exe data "$semantic_name"
+    python3 main.py
+fi
+
+echo -e "${SUCCESS}Runthrough complete!${NC}"

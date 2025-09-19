@@ -36,6 +36,11 @@ class YahooFinanceDataPuller:
             # Reset index to make Date a column
             data.reset_index(inplace=True)
 
+            # Ensure 'Volume' column exists
+            if 'Volume' not in data.columns:
+                print(f"Warning: 'Volume' column missing for {symbol}. Filling with zeros.")
+                data['Volume'] = 0
+
             print(f"Successfully fetched {len(data)} records for {symbol}")
             return data
             
