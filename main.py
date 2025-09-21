@@ -1,7 +1,8 @@
-import sys
-sys.path.append('./algorithms/gru_model')
 
+# This imports all of the ML objects, allowing us to control what we do wth these models
 from algorithms.gru_model.gru_object import GRUModel
+
+from algorithms.sentiment_model.sentiment_object import SentimentModel
 
 
 
@@ -14,12 +15,14 @@ output_size = 1
 sequence_length = 60
 # ============================
 
+
 def main():
 
-    mode = input("Train or predict? (t/p) ").strip().lower()
+    mode = input("Train / predict / skip GRU model? (t/p/s) ").strip().lower()
 
 
-    if mode == 't':
+
+    if mode != 's' and mode == 't':
         # ---------- TRAIN MODEL -------------
         # initialize a gru model object
         gru_model = GRUModel(input_size, hidden_size, output_size)
@@ -40,7 +43,7 @@ def main():
         gru_model.save_model( f"./algorithms/gru_model/models/{symbol}_gru_model.pth" )
 
 
-    else:
+    elif mode != 's' and mode == 'p':
         # -------------- TEST MODEL ------------
         gru_model = GRUModel(input_size, hidden_size, output_size)
 
@@ -52,10 +55,19 @@ def main():
         gru_model.format_data()
         gru_model.predict()
 
-        price_prediction = gru_model.un_normalize()[-1]
+        price_prediction = gru_model.un_normalize()[-1] # get the last prediction
 
         print(f"\nThe past 10 day window: \n{gru_model.raw_data['Close'].tail(10).values}")
         print(f"\nPredicted future closing price: {price_prediction}")
+
+     
+    sentiment = SentimentModel()
+
+    sentiment.format_data()
+    sentiment.train_model( epochs=30, lr=0.01 )
+
+    print(sentiment.predict_sentiment("I love this product! It's absolutely fantastic."))  # Expected: Positive sentiment
+    print(sentiment.predict_sentiment("This is the worst service I've ever experienced."))
 
 #testing
 if __name__ == "__main__":

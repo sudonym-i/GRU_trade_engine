@@ -1,7 +1,7 @@
-from train_gru import train_gru_model
-from gru_architecture import GRUPredictor
-from data_pipeline.formatify import format_dataframe_for_gru
-from .data_pipeline.yahoo_finance_data import YahooFinanceDataPuller
+from algorithms.gru_model.train_gru import train_gru_model
+from algorithms.gru_model.gru_architecture import GRUPredictor
+from algorithms.gru_model.data_pipeline.formatify import format_dataframe_for_gru
+from algorithms.gru_model.data_pipeline.yahoo_finance_data import YahooFinanceDataPuller
 import numpy as np
 import torch
 
