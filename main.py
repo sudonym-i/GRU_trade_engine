@@ -72,6 +72,8 @@ def main():
      
     sentiment = SentimentModel()
 
+
+    sentiment.pull_training_data()
     sentiment.format_data()
     sentiment.train_model( epochs=30, lr=0.01 )
 

@@ -20,24 +20,24 @@ class SentimentModel:
         )
         return None
 
-    def train_model(self, label_path=None, epochs=20, lr=0.01):
+    def train_model(self, epochs=20, lr=0.01):
         """
-        Train the sentiment model using train_sentiment_model utility.
-        Updates self.model with trained weights.
+        Train the sentiment model using train_sentiment_model utility on Sentiment140 (twitter) data.
+        Updates self.model with trained weights and loads the vectorizer.
         """
         base_dir = os.path.dirname(__file__)
-        model = train_sentiment_model(
-            raw_path='data/youtube_data.raw',
-            vectorizer_path='data/youtube_vectorizer.pkl',
-            features_path='data/youtube_features.npy',
-            model_save_path='data/sentiment_logistic_model.pt',
-            label_path=label_path or 'data/youtube_labels.npy',
-            max_features=300,
+        data_dir = os.path.abspath(os.path.join(base_dir, '../../data'))
+        model, vectorizer = train_sentiment_model(
+            features_path=os.path.join(data_dir, 'twitter_features.npy'),
+            labels_path=os.path.join(data_dir, 'twitter_labels.npy'),
+            vectorizer_path=os.path.join(data_dir, 'twitter_vectorizer.pkl'),
+            model_save_path=os.path.join(data_dir, 'sentiment_logistic_model.pt'),
             epochs=epochs,
             lr=lr
         )
         self.model.load_state_dict(model.state_dict())
         self.model.eval()
+        self.vectorizer = vectorizer
 
 
     def load_model(self, model_path: str):
