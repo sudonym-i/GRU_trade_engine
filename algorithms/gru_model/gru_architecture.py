@@ -5,6 +5,9 @@ PyTorch implementation of a GRU model for time series regression to predict next
 """
 
 import torch
+
+# Device management: use GPU if available, else CPU
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 import torch.nn as nn
 import torch.optim as optim
 import pandas as pd
@@ -46,6 +49,8 @@ class GRUPredictor(nn.Module):
         self.dropout = nn.Dropout(dropout)
 
     def forward(self, past_series: torch.Tensor) -> torch.Tensor:
+        # Ensure input is on the same device as the model
+        past_series = past_series.to(next(self.parameters()).device)
         gru_out, _ = self.gru(past_series)
         last_output = gru_out[:, -1, :]
         output = self.relu(self.fc1(last_output))

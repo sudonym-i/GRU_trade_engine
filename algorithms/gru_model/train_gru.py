@@ -1,4 +1,4 @@
-def train_gru_model(model, train_tensor, target_tensor, epochs=10, lr=0.001, batch_size=32):
+def train_gru_model(model, train_tensor, target_tensor, epochs=10, lr=0.001, batch_size=32, device=None):
     """
     Train a GRUStockPredictor model using formatted data.
 
@@ -13,6 +13,13 @@ def train_gru_model(model, train_tensor, target_tensor, epochs=10, lr=0.001, bat
     import torch
     from torch.utils.data import TensorDataset, DataLoader
 
+    if device is None:
+        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+    model.to(device)
+    train_tensor = train_tensor.to(device)
+    target_tensor = target_tensor.to(device)
+
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
     criterion = torch.nn.MSELoss()
     dataset = TensorDataset(train_tensor, target_tensor)
@@ -22,6 +29,8 @@ def train_gru_model(model, train_tensor, target_tensor, epochs=10, lr=0.001, bat
         model.train()
         epoch_loss = 0
         for batch_x, batch_y in loader:
+            batch_x = batch_x.to(device)
+            batch_y = batch_y.to(device)
             optimizer.zero_grad()
             output = model(batch_x)
             loss = criterion(output, batch_y)

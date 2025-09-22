@@ -1,4 +1,3 @@
-
 from algorithms.sentiment_model.logistic_model import LogisticSentimentModel
 from algorithms.sentiment_model.format_youtube_data import format_youtube_data
 from algorithms.sentiment_model.train_sentiment_model import train_sentiment_model
@@ -69,3 +68,19 @@ class SentimentModel:
             logits = self.model(X_tensor)
             prob = torch.sigmoid(logits).item()
         return prob
+
+    def pull_training_data(self):
+        """
+        Downloads and processes the Sentiment140 dataset by running the fetch_and_format_sentiment140.py script.
+        This will create the required features, labels, and vectorizer files for training.
+        """
+        import subprocess
+        import sys
+        script_path = os.path.join(os.path.dirname(__file__), 'fetch_and_format_sentiment140.py')
+        result = subprocess.run([sys.executable, script_path], capture_output=True, text=True)
+        print(result.stdout)
+        if result.returncode != 0:
+            print('Error running fetch_and_format_sentiment140.py:')
+            print(result.stderr)
+        else:
+            print('Sentiment140 dataset downloaded and processed successfully.')

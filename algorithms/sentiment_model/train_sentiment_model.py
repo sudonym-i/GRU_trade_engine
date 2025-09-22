@@ -1,13 +1,24 @@
+
 # Train a logistic regression sentiment model using formatted YouTube data
+
+
+# Fix import path for local and package usage
+import sys
+import os
 import torch
 import torch.nn as nn
 import torch.optim as optim
 import numpy as np
-import os
+import pickle
 
-from algorithms.sentiment_model.format_youtube_data import format_youtube_data
-from algorithms.sentiment_model.logistic_model import LogisticSentimentModel
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+try:
+    from algorithms.sentiment_model.format_youtube_data import format_youtube_data
+    from algorithms.sentiment_model.logistic_model import LogisticSentimentModel
+except ImportError:
+    from format_youtube_data import format_youtube_data
+    from logistic_model import LogisticSentimentModel
 
 def load_labels(label_path, num_samples):
 	"""
@@ -18,45 +29,37 @@ def load_labels(label_path, num_samples):
 	# TODO: Replace with actual label loading from file
 	return torch.randint(0, 2, (num_samples, 1), dtype=torch.float32)
 
+
 def train_sentiment_model(
-	raw_path,
-	vectorizer_path,
 	features_path,
+	labels_path,
+	vectorizer_path,
 	model_save_path,
-	label_path=None,
-	max_features=1000,
 	epochs=20,
 	lr=0.01
 ):
 	"""
-	Trains a logistic regression sentiment model using formatted YouTube data.
+	Trains a logistic regression sentiment model using pre-extracted features and labels (e.g., from Sentiment140).
 	Args:
-		raw_path: Path to raw YouTube data.
+		features_path: Path to features (npy).
+		labels_path: Path to labels (npy).
 		vectorizer_path: Path to vectorizer pickle file.
-		features_path: Path to save features (npy).
 		model_save_path: Path to save trained model.
-		label_path: Path to labels (optional, uses dummy if None).
-		max_features: Number of TF-IDF features.
 		epochs: Training epochs.
 		lr: Learning rate.
 	Returns:
 		model: Trained model.
 	"""
-	features_tensor, vectorizer, samples = format_youtube_data(
-		raw_path=raw_path,
-		output_features_path=features_path,
-		output_vectorizer_path=vectorizer_path,
-		max_features=max_features,
-		use_existing_vectorizer=True
-	)
-
-	if label_path is not None and os.path.exists(label_path):
-		labels_np = np.load(label_path)
-		labels = torch.tensor(labels_np, dtype=torch.float32)
-		if labels.ndim == 1:
-			labels = labels.unsqueeze(1)
-	else:
-		labels = load_labels(label_path, features_tensor.shape[0])
+	# Load features and labels
+	features_np = np.load(features_path)
+	labels_np = np.load(labels_path)
+	features_tensor = torch.tensor(features_np, dtype=torch.float32)
+	labels = torch.tensor(labels_np, dtype=torch.float32)
+	if labels.ndim == 1:
+		labels = labels.unsqueeze(1)
+	# Load vectorizer for later inference compatibility
+	with open(vectorizer_path, 'rb') as f:
+		vectorizer = pickle.load(f)
 
 	input_dim = features_tensor.shape[1]
 	model = LogisticSentimentModel(input_dim)
@@ -76,18 +79,17 @@ def train_sentiment_model(
 
 	torch.save(model.state_dict(), model_save_path)
 	print(f"Model saved to {model_save_path}")
-	return model
+	return model, vectorizer
 
 if __name__ == "__main__":
-	# Example usage for CLI
-	base_dir = os.path.dirname(__file__)
-	train_sentiment_model(
-		raw_path=os.path.join(base_dir, '../../data/youtube_data.raw'),
-		vectorizer_path=os.path.join(base_dir, 'youtube_vectorizer.pkl'),
-		features_path=os.path.join(base_dir, 'youtube_features.npy'),
-		model_save_path=os.path.join(base_dir, 'sentiment_logistic_model.pt'),
-		label_path=os.path.join(base_dir, '../../data/youtube_labels.npy'),
-		max_features=1000,
-		epochs=20,
-		lr=0.01
-	)
+    # Example usage for CLI: train on Sentiment140 data
+    base_dir = os.path.dirname(__file__)
+    data_dir = os.path.abspath(os.path.join(base_dir, '../../data'))
+    train_sentiment_model(
+        features_path=os.path.join(data_dir, 'twitter_features.npy'),
+        labels_path=os.path.join(data_dir, 'twitter_labels.npy'),
+        vectorizer_path=os.path.join(data_dir, 'twitter_vectorizer.pkl'),
+        model_save_path=os.path.join(data_dir, 'sentiment_logistic_model.pt'),
+        epochs=20,
+        lr=0.01
+    )

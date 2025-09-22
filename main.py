@@ -1,22 +1,31 @@
-
 # This imports all of the ML objects, allowing us to control what we do wth these models
 from algorithms.gru_model.gru_object import GRUModel
 
 from algorithms.sentiment_model.sentiment_object import SentimentModel
+import torch
 
 
 
 # ============================
 # testing data
-symbol = 'MSFT'
+symbol = 'ORCL'
 input_size = 5  # OHLCV
-hidden_size = 512
+hidden_size = 2048
 output_size = 1
-sequence_length = 60
+sequence_length = 150
 # ============================
 
 
+def print_device_info():
+    print('CUDA available:', torch.cuda.is_available())
+    if torch.cuda.is_available():
+        print('CUDA device:', torch.cuda.get_device_name(0))
+    else:
+        print('No CUDA device detected. Running on CPU or integrated graphics.')
+
+
 def main():
+    print_device_info()
 
     mode = input("Train / predict / skip GRU model? (t/p/s) ").strip().lower()
 
@@ -31,7 +40,7 @@ def main():
         gru_model.data_dir = "./data"
 
         # tell the object to pull neccesary data for itself
-        gru_model.pull_data(symbol=symbol, period="1y")
+        gru_model.pull_data(symbol=symbol, period="max")
 
         # this tells the object to format and normalize the data for both training and criterion
         # "scaler" is returned for un-normalizing predictions later
