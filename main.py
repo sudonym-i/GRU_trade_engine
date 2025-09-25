@@ -1,7 +1,7 @@
 # This imports all of the ML objects, allowing us to control what we do wth these models
 from algorithms.gru_model.gru_object import GRUModel
+from algorithms.sentiment_model.youtube_sentiment import YouTubeSentimentAnalyzer
 
-from algorithms.sentiment_model.sentiment_object import SentimentModel
 import torch
 
 
@@ -9,7 +9,7 @@ import torch
 # ============================
 # testing data
 symbol = 'ORCL'
-input_size = 5  # OHLCV
+input_size = 12  # OHLCV
 hidden_size = 2048
 output_size = 1
 sequence_length = 150
@@ -40,7 +40,7 @@ def main():
         gru_model.data_dir = "./data"
 
         # tell the object to pull neccesary data for itself
-        gru_model.pull_data(symbol=symbol, period="max")
+        gru_model.pull_data(symbol=symbol, period="1y")
 
         # this tells the object to format and normalize the data for both training and criterion
         # "scaler" is returned for un-normalizing predictions later
@@ -69,16 +69,16 @@ def main():
         print(f"\nThe past 10 day window: \n{gru_model.raw_data['Close'].tail(10).values}")
         print(f"\nPredicted future closing price: {price_prediction}")
 
-     
-    sentiment = SentimentModel()
 
 
-    sentiment.pull_training_data()
-    sentiment.format_data()
-    sentiment.train_model( epochs=30, lr=0.01 )
+    def run_youtube_sentiment():
+        analyzer = YouTubeSentimentAnalyzer()
+        data_path = "./data/youtube_data.raw"
+        result = analyzer.analyze_file(data_path)
+        print(f"Average sentiment score: {result['average_score']}")
+        print(f"Processed {result['num_entries']} entries.")
 
-    print(sentiment.predict_sentiment("I love this product! It's absolutely fantastic."))  # Expected: Positive sentiment
-    print(sentiment.predict_sentiment("This is the worst service I've ever experienced."))
+    run_youtube_sentiment()
 
 #testing
 if __name__ == "__main__":

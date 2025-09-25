@@ -1,35 +1,38 @@
+
 import torch
 from transformers import pipeline
 
-# Load prebuilt sentiment analysis pipeline
-sentiment_analyzer = pipeline("sentiment-analysis", model="distilbert-base-uncased-finetuned-sst-2-english")
+class YouTubeSentimentAnalyzer:
+    def __init__(self, model_name="distilbert-base-uncased-finetuned-sst-2-english"):
+        self.sentiment_analyzer = pipeline("sentiment-analysis", model=model_name)
 
-def read_youtube_data(file_path):
-    with open(file_path, "r", encoding="utf-8") as f:
-        lines = [line.strip() for line in f if line.strip()]
-    return lines
+    def read_youtube_data(self, file_path):
+        with open(file_path, "r", encoding="utf-8") as f:
+            lines = [line.strip() for line in f if line.strip()]
+        return lines
 
-def main():
-    data_path = "/home/isaac/projects/GRU_trade_engine/data/youtube_data.raw"
-    texts = read_youtube_data(data_path)
-    results = []
-    for text in texts:
+    def analyze_file(self, file_path):
+        texts = self.read_youtube_data(file_path)
+        results = []
+        for text in texts:
+            truncated_text = text[:512]
+            try:
+                result = self.sentiment_analyzer(truncated_text)[0]
+                results.append({"score": result["score"]})
+            except Exception as e:
+                print(f"Error processing text: {e}\nText: {truncated_text[:100]}...")
+        final_result = sum(r['score'] for r in results) / len(results) if results else 0
+        return {
+            "average_score": final_result,
+            "num_entries": len(results),
+            "results": results
+        }
+
+    def analyze_text(self, text):
         truncated_text = text[:512]
         try:
-            result = sentiment_analyzer(truncated_text)[0]
-            results.append({"score": result["score"]})
+            result = self.sentiment_analyzer(truncated_text)[0]
+            return result
         except Exception as e:
             print(f"Error processing text: {e}\nText: {truncated_text[:100]}...")
-    # Print results
-    final_result = 0;
-
-    for r in results:
-        final_result += r['score']
-    
-    final_result = final_result / len(results) if results else 0
-    
-    print(f"{final_result}")
-    print(f"Processed {len(results)} entries.")
-
-if __name__ == "__main__":
-    main()
+            return None

@@ -25,14 +25,15 @@ class GRUModel:
             hidden_size (int): Number of hidden units in GRU.
             output_size (int): Number of output features.
         """
-        self.model = GRUPredictor(input_size, hidden_size, output_size)
+        self.input_size = input_size
+        self.model = GRUPredictor(self.input_size, hidden_size=64, num_layers=2, dropout=0.2)
         self.data_dir = "./data"
         self.raw_data = None
         self.input_tensor = None
         self.target_tensor = None
         self.scaler = None
         self.output_tensor = None
-        return None
+
 
     def format_data(self, for_training: bool = True):
         """
@@ -43,12 +44,16 @@ class GRUModel:
         Returns:
             Formatted data suitable for GRU traini`ng/prediction.
         """
-        if( for_training ):
-            self.input_tensor, self.target_tensor, self.scaler = format_dataframe_for_gru(self.raw_data)
+        if for_training:
+            self.input_tensor, self.target_tensor, self.scaler, feature_cols = format_dataframe_for_gru(self.raw_data)
         else:
-            self.input_tensor, _, self.scaler = format_dataframe_for_gru(self.raw_data)
+            self.input_tensor, _, self.scaler, feature_cols = format_dataframe_for_gru(self.raw_data)
+        # Set input size from feature columns if not already set
+        if self.input_size is None:
+            self.input_size = len(feature_cols)
 
         return None
+
 
     def train(self, epochs=10, lr=0.001, batch_size=32):
         import torch
@@ -104,24 +109,23 @@ class GRUModel:
     def un_normalize(self):
         """
         Un-normalize the model's output using the fitted scaler.
-
-        Args:
-            normalized_data: Normalized model output (tensor or numpy array).
-            scaler: Fitted MinMaxScaler object.
-            feature_cols (list): List of feature columns used for scaling.
         Returns:
             Un-normalized 'Close' price(s).
         """
         normalized_data = self.output_tensor
-
-        feature_cols = ['Open', 'High', 'Low', 'Close', 'Volume']
+        feature_cols = getattr(self, 'feature_cols', None)
+        if feature_cols is None:
+            try:
+                feature_cols = self.scaler.feature_names_in_.tolist()
+            except AttributeError:
+                feature_cols = ['Open', 'High', 'Low', 'Close', 'Volume', 'EMA_14', 'RSI_14', 'MACD', 'MACD_Signal', 'BB_Upper', 'BB_Lower', 'Volatility_20']
         if hasattr(normalized_data, 'detach'):
             normalized_data = normalized_data.detach().cpu().numpy()
-
         normalized_data = np.array(normalized_data).reshape(-1, 1)
         dummy = np.zeros((normalized_data.shape[0], len(feature_cols)))
-        dummy[:, feature_cols.index('Close')] = normalized_data.squeeze()
-        result = self.scaler.inverse_transform(dummy)[:, feature_cols.index('Close')]
+        close_idx = feature_cols.index('Close')
+        dummy[:, close_idx] = normalized_data.squeeze()
+        result = self.scaler.inverse_transform(dummy)[:, close_idx]
         return result
 
     def save_model(self, filepath : str = "algorithms/gru_model/models/cached_gru_model.pth"):

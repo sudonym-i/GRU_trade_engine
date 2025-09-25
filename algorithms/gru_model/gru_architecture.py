@@ -22,10 +22,10 @@ from datetime import datetime, timedelta
 class GRUPredictor(nn.Module):
     """GRU-based neural network for stock price prediction"""
     
-    def __init__(self, input_size: int = 5, hidden_size: int = 64, num_layers: int = 2, dropout: float = 0.2):
+    def __init__(self, input_size: int = 12, hidden_size: int = 64, num_layers: int = 2, dropout: float = 0.2):
         """
         Args:
-            input_size (int): Number of input features (default 5 for OHLCV: Open, High, Low, Close, Volume)
+            input_size (int): Number of input features (default 12 for OHLCV + indicators)
             hidden_size (int): Number of hidden units in GRU.
             num_layers (int): Number of GRU layers.
             dropout (float): Dropout rate.
