@@ -89,6 +89,7 @@ if [[ "$choice" == "r" || "$choice" == "R" ]]; then
 fi
 
 mkdir data
+mkdir algorithms/gru_model/models
 
 if [[ "$choice" == "y" || "$choice" == "Y" ]]; then
 
