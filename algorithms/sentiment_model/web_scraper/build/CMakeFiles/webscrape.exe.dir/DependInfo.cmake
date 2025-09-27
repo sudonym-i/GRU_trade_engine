@@ -8,8 +8,8 @@ set(CMAKE_DEPENDS_LANGUAGES
 
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
-  "/home/isaac/projects/GRU_trade_engine/algorithms/sentiment_model/web_scraper/main.cpp" "CMakeFiles/webscrape.exe.dir/main.cpp.o" "gcc" "CMakeFiles/webscrape.exe.dir/main.cpp.o.d"
-  "/home/isaac/projects/GRU_trade_engine/algorithms/sentiment_model/web_scraper/scraper.cpp" "CMakeFiles/webscrape.exe.dir/scraper.cpp.o" "gcc" "CMakeFiles/webscrape.exe.dir/scraper.cpp.o.d"
+  "/home/sudonym/GRU_trade_engine/algorithms/sentiment_model/web_scraper/main.cpp" "CMakeFiles/webscrape.exe.dir/main.cpp.o" "gcc" "CMakeFiles/webscrape.exe.dir/main.cpp.o.d"
+  "/home/sudonym/GRU_trade_engine/algorithms/sentiment_model/web_scraper/scraper.cpp" "CMakeFiles/webscrape.exe.dir/scraper.cpp.o" "gcc" "CMakeFiles/webscrape.exe.dir/scraper.cpp.o.d"
   "" "webscrape.exe" "gcc" "CMakeFiles/webscrape.exe.dir/link.d"
   )
 
