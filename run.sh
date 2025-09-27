@@ -1,3 +1,4 @@
+source .venv/bin/activate
 
     # 1. Run GRU prediction
 python3 main.py --mode p --symbol "$stock_ticker" > gru_prediction.out

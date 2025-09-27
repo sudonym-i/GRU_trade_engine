@@ -141,7 +141,7 @@ fi
 
 if [[ "$train_gru" == "y" || "$train_gru" == "Y" ]]; then
     echo -e "${INFO}Training GRU model...${NC}"
-    python3 main.py --mode t --symbol "$stock_ticker" --epochs 30 --batch_size 10 --lr 0.001
+    python3 main.py --mode t --symbol "$stock_ticker" --epochs 30 --batch_size 3 --lr 0.001
 fi
 
 echo -e "${SUCCESS}Training workflow complete!${NC}"
