@@ -93,9 +93,9 @@ if [[ "$choice" == "y" || "$choice" == "Y" ]]; then
 
     show_progress 2 "Checking dependencies."
 
-    sudo apt update && sudo apt upgrade -y  > /dev/null 2>&1
+    sudo apt update && sudo apt upgrade -y 
 
-    sudo apt install -y python3-full  > /dev/null 2>&1
+    sudo apt install -y python3-full  
 
     if [ -d ".venv" ]; then
         echo ".venv directory already exists, skipping creation"
@@ -105,8 +105,8 @@ if [[ "$choice" == "y" || "$choice" == "Y" ]]; then
 
     source .venv/bin/activate
 
-    sudo apt install -y libcurl4-openssl-dev > /dev/null 2>&1
-    sudo apt install -y libfmt-dev > /dev/null 2>&1
+    sudo apt install -y libcurl4-openssl-dev 
+    sudo apt install -y libfmt-dev 
 
     home=$(pwd)
 
@@ -118,7 +118,7 @@ if [[ "$choice" == "y" || "$choice" == "Y" ]]; then
 
     cd $home
 
-    pip install -r algorithms/requirements.txt > /dev/null 2>&1
+    pip install -r algorithms/requirements.txt
 else
     echo -e "${INFO}Skipping installation...${NC}"
     source .venv/bin/activate
