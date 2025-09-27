@@ -97,13 +97,10 @@ if [[ "$choice" == "y" || "$choice" == "Y" ]]; then
 
     sudo apt install -y python3-full  
 
-    if [ -d ".venv" ]; then
-        echo ".venv directory already exists, skipping creation"
-    else
-        python3 -m venv .venv 
-    fi
+    python3 -m venv .venv 
 
     source .venv/bin/activate
+    pip install -r algorithms/requirements.txt
 
     sudo apt install -y libcurl4-openssl-dev 
     sudo apt install -y libfmt-dev 
@@ -117,13 +114,12 @@ if [[ "$choice" == "y" || "$choice" == "Y" ]]; then
     chmod +x webscrape.exe
 
     cd $home
-
-    pip install -r algorithms/requirements.txt
 else
     echo -e "${INFO}Skipping installation...${NC}"
     source .venv/bin/activate
 fi
 
+source .venv/bin/activate
 
 # === Custom Training Workflow ===
 
