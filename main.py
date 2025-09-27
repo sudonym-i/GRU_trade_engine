@@ -103,13 +103,13 @@ def main():
         gru_model.pull_data(symbol=symbol_arg, period="max")
         gru_model.format_data()
         gru_model.train(epochs=args.epochs, lr=args.lr, batch_size=args.batch_size)
-        gru_model.save_model(f"algorithms/gru_model/models/{symbol_arg}_gru_model.pth")
+        gru_model.save_model(f"algorithms/gru_model/models/gru_model.pth")
 
     elif mode != 's' and mode == 'p':
         # -------------- PREDICT ------------
         gru_model = GRUModel(input_size, hidden_size, output_size)
         gru_model.data_dir = "data"
-        gru_model.load_model(f"algorithms/gru_model/models/{symbol_arg}_gru_model.pth")
+        gru_model.load_model(f"algorithms/gru_model/models/gru_model.pth")
         gru_model.pull_data(symbol=symbol_arg, period="3mo")
         gru_model.format_data()
         gru_model.predict()
