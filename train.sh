@@ -133,6 +133,7 @@ read -p "Train GRU model? (y/n): " train_gru
 
 if [[ "$train_sentiment" == "y" || "$train_sentiment" == "Y" ]]; then
     echo -e "${INFO}Training sentiment analysis model...${NC}"
+    "$home"/algorithms/sentiment_model/web_scraper/build/webscrape.exe data "$company_name"
     python3 main.py --mode s --symbol "$stock_ticker"
 fi
 
