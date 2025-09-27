@@ -136,3 +136,15 @@ if [ "$run_choice" == "y" ] || [ "$run_choice" == "Y" ]; then
 fi
 
 echo -e "${SUCCESS}Runthrough complete!${NC}"
+
+# =============================
+# Automated CLI argument tests
+# =============================
+
+echo -e "${INFO}Testing main.py with --mode t (train)...${NC}"
+python3 main.py --mode t --symbol ORCL --epochs 1 --batch_size 1 --lr 0.001
+
+echo -e "${INFO}Testing main.py with --mode p (predict)...${NC}"
+python3 main.py --mode p --symbol ORCL
+
+echo -e "${SUCCESS}CLI argument tests complete!${NC}"
