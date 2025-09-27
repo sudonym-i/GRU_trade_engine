@@ -12,7 +12,7 @@ import os
 
 # ============================
 # testing data
-symbol = 'ORCL'
+symbol = 'MSFT'
 input_size = 12  # OHLCV
 hidden_size = 2048
 output_size = 1
@@ -100,13 +100,13 @@ def main():
         # ---------- TRAIN MODEL -------------
         gru_model = GRUModel(input_size, hidden_size, output_size)
         gru_model.data_dir = "./data"
-        gru_model.pull_data(symbol=symbol_arg, period="1y")
+        gru_model.pull_data(symbol=symbol_arg, period="max")
         gru_model.format_data()
         gru_model.train(epochs=args.epochs, lr=args.lr, batch_size=args.batch_size)
         gru_model.save_model(f"./algorithms/gru_model/models/{symbol_arg}_gru_model.pth")
 
     elif mode != 's' and mode == 'p':
-        # -------------- TEST MODEL ------------
+        # -------------- PREDICT ------------
         gru_model = GRUModel(input_size, hidden_size, output_size)
         gru_model.data_dir = "./data"
         gru_model.load_model(f"./algorithms/gru_model/models/{symbol_arg}_gru_model.pth")
