@@ -129,10 +129,19 @@ read -p "Test run project (y/n): " run_choice
 read -p "Enter stock ticker (default: NVDA): " stock_ticker
 read -p "Enter the name of this company: " semantic_name
 
+
 if [ "$run_choice" == "y" ] || [ "$run_choice" == "Y" ]; then
-# Find webscrape arguments, I forget
-    .$home/algorithms/sentiment_model/web_scraper/build/webscrape.exe data "$semantic_name"
-    python3 main.py
+    # 1. Run GRU prediction
+    python3 main.py --mode p --symbol "$stock_ticker" > gru_prediction.out
+
+    # 2. Run webscraper (C++ program)
+    "$home"/algorithms/sentiment_model/web_scraper/build/webscrape.exe data "$semantic_name"
+
+    # 3. Run sentiment analysis (assuming main.py or another script)
+    python3 main.py --mode s --symbol "$stock_ticker" > sentiment_analysis.out
+
+    # 4. Send results to Discord using main.py (add a CLI option for this if needed)
+    python3 main.py --mode discord --symbol "$stock_ticker" --prediction_file gru_prediction.out --sentiment_file sentiment_analysis.out
 fi
 
 echo -e "${SUCCESS}Runthrough complete!${NC}"
@@ -148,3 +157,5 @@ echo -e "${INFO}Testing main.py with --mode p (predict)...${NC}"
 python3 main.py --mode p --symbol ORCL
 
 echo -e "${SUCCESS}CLI argument tests complete!${NC}"
+
+
