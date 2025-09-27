@@ -88,6 +88,7 @@ if [[ "$choice" == "r" || "$choice" == "R" ]]; then
         choice="y"
 fi
 
+mkdir data
 
 if [[ "$choice" == "y" || "$choice" == "Y" ]]; then
 

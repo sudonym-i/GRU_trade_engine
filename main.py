@@ -103,7 +103,7 @@ def main():
         gru_model.pull_data(symbol=symbol_arg, period="max")
         gru_model.format_data()
         gru_model.train(epochs=args.epochs, lr=args.lr, batch_size=args.batch_size)
-        gru_model.save_model(f"./algorithms/gru_model/models/{symbol_arg}_gru_model.pth")
+        gru_model.save_model(f"/algorithms/gru_model/models/{symbol_arg}_gru_model.pth")
 
     elif mode != 's' and mode == 'p':
         # -------------- PREDICT ------------
@@ -119,7 +119,7 @@ def main():
 
     def run_youtube_sentiment():
         analyzer = YouTubeSentimentAnalyzer()
-        data_path = "./data/youtube_data.raw"
+        data_path = "data/youtube_data.raw"
         result = analyzer.analyze_file(data_path)
         print(f"Average sentiment score: {result['average_score']}")
         print(f"Processed {result['num_entries']} entries.")
