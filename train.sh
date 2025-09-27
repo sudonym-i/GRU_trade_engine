@@ -107,6 +107,8 @@ if [[ "$choice" == "y" || "$choice" == "Y" ]]; then
 
     home=$(pwd)
 
+    yes| rm -r algorithms/sentiment_model/web_scraper/build/CMakeCache.txt
+
     cd algorithms/sentiment_model/web_scraper/build
     show_progress 2 "Building c++."
     cmake ..
