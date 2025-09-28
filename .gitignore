@@ -4,3 +4,4 @@ __pycache__
 params.txt
 .discord_webhook
 .vscode
+.gru_prediction.out

@@ -145,10 +145,10 @@ if [[ "$train_gru" == "y" || "$train_gru" == "Y" ]]; then
 fi
 
 
-rm params.txt
-touch params.txt
-echo "stock_ticker=$stock_ticker" >> params.txt
-echo "company_name=$company_name" >> params.txt
+rm data/params.txt
+touch data/params.txt
+echo "stock_ticker=$stock_ticker" >> data/params.txt
+echo "company_name=$company_name" >> data/params.txt
 
 
 
