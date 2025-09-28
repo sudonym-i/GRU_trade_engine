@@ -18,6 +18,12 @@ output_size = 1
 sequence_length = 150
 # ============================
 
+def run_youtube_sentiment():
+        analyzer = YouTubeSentimentAnalyzer()
+        data_path = "data/youtube_data.raw"
+        result = analyzer.analyze_file(data_path)
+        print(f"\n**Average sentiment score: {result['average_score']}/1**\n")
+
 
 # Discord webhook URL (read from .discord_webhook file if present, else env variable)
 def get_discord_webhook_url():
@@ -61,7 +67,6 @@ def main():
     if mode == 'discord':
         # Read prediction and sentiment output files
         prediction_text = ""
-        sentiment_text = ""
         if args.prediction_file:
             try:
                 with open(args.prediction_file, 'r') as f:
@@ -75,7 +80,7 @@ def main():
             except Exception as e:
                 sentiment_text = f"Error reading sentiment file: {e}"
         # Format message
-        message = f" Price Prediction:\n{prediction_text}\n\n Sentiment Analysis:\n{sentiment_text}"
+        message = f" Price Prediction:\n{prediction_text}\n\n"
         # Send to Discord
         success = send_discord_message(message)
         if success:
@@ -101,17 +106,12 @@ def main():
         gru_model.pull_data(symbol=symbol_arg, period="3mo")
         gru_model.format_data()
         gru_model.predict()
-        price_prediction = [round(x, 2) for x in gru_model.un_normalize()]
-        print(f"\nThe past 10 day window: \n\n{gru_model.raw_data['Close'].tail(10).values}")
-        print(f"\n\n **Predicted future closing price: {price_prediction}**\n\n")
+        price_prediction = gru_model.un_normalize()[-1]
+        print(f"\nThe past 10 day window: \n{gru_model.raw_data['Close'].tail(10).values}")
+        print(f"\n\n**Predicted future closing price: {price_prediction}**\n\n")
 
-    def run_youtube_sentiment():
-        analyzer = YouTubeSentimentAnalyzer()
-        data_path = "data/youtube_data.raw"
-        result = analyzer.analyze_file(data_path)
-        print(f"Average sentiment score: {round(result['average_score'], 2)} / 1")
-
-    run_youtube_sentiment()
+    if mode == 's':
+        run_youtube_sentiment()
 
 #testing
 if __name__ == "__main__":
