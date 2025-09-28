@@ -11,7 +11,6 @@ import os
 
 
 # ============================
-# testing data
 symbol = 'MSFT'
 input_size = 12  # OHLCV
 hidden_size = 2048
