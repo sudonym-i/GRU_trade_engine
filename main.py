@@ -75,7 +75,7 @@ def main():
             except Exception as e:
                 sentiment_text = f"Error reading sentiment file: {e}"
         # Format message
-        message = f" Price Prediction:\n{prediction_text}\n\n Sentiment Analysis (Negative 0 -> 100 Positive):\n{sentiment_text}"
+        message = f" Price Prediction:\n{prediction_text}\n\n Sentiment Analysis:\n{sentiment_text}"
         # Send to Discord
         success = send_discord_message(message)
         if success:
@@ -103,13 +103,13 @@ def main():
         gru_model.predict()
         price_prediction = [round(x, 2) for x in gru_model.un_normalize()]
         print(f"\nThe past 10 day window: \n\n{gru_model.raw_data['Close'].tail(10).values}")
-        print(f"\n\n **Predicted future closing price: {round(price_prediction, 2)}**\n\n")
+        print(f"\n\n **Predicted future closing price: {price_prediction}**\n\n")
 
     def run_youtube_sentiment():
         analyzer = YouTubeSentimentAnalyzer()
         data_path = "data/youtube_data.raw"
         result = analyzer.analyze_file(data_path)
-        print(f"Average sentiment score: {round(result['average_score'], 2)}")
+        print(f"Average sentiment score: {round(result['average_score'], 2)} / 1")
 
     run_youtube_sentiment()
 
