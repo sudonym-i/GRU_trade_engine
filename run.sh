@@ -10,6 +10,8 @@ else
     exit 1
 fi
 
+mkdir data/output
+
 # 1. Run GRU prediction
 python3 main.py --mode p --symbol "$stock_ticker" > data/output/gru_prediction.out
 
