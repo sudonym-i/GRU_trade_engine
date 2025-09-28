@@ -19,7 +19,7 @@ python3 main.py --mode p --symbol "$stock_ticker" > data/output/gru_prediction.o
 "$(pwd)"/algorithms/sentiment_model/web_scraper/build/webscrape.exe data "$company_name"
 
 # 3. Run sentiment analysis
-#python3 main.py --mode s --symbol "$stock_ticker" > data/output/sentiment_analysis.out
+python3 main.py --mode s --symbol "$stock_ticker" > data/output/sentiment_analysis.out
 
 # 4. Send results to Discord
 python3 main.py --mode discord --symbol "$stock_ticker" --prediction_file data/output/gru_prediction.out --sentiment_file data/output/sentiment_analysis.out
