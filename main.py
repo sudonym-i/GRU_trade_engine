@@ -43,18 +43,7 @@ def send_discord_message(message: str):
     return True
 
 
-def print_device_info():
-    print('CUDA available:', torch.cuda.is_available())
-    if torch.cuda.is_available():
-        print('CUDA device:', torch.cuda.get_device_name(0))
-    else:
-        print('No CUDA device detected. Running on CPU or integrated graphics.')
-
-
-
 def main():
-    print_device_info()
-
 
     parser = argparse.ArgumentParser(description="GRU Trade Engine")
     parser.add_argument('--mode', choices=['t', 'p', 's', 'discord'], required=True, help="Mode: t=train, p=predict, s=skip GRU model, discord=send results to Discord")
@@ -112,16 +101,15 @@ def main():
         gru_model.pull_data(symbol=symbol_arg, period="3mo")
         gru_model.format_data()
         gru_model.predict()
-        price_prediction = gru_model.un_normalize()[-1]
-        print(f"\nThe past 10 day window: \n{gru_model.raw_data['Close'].tail(10).values}")
-        print(f"\nPredicted future closing price: {price_prediction}")
+        price_prediction = [round(x, 2) for x in gru_model.un_normalize()]
+        print(f"\nThe past 10 day window: \n\n{gru_model.raw_data['Close'].tail(10).values}")
+        print(f"\n\n **Predicted future closing price: {round(price_prediction, 2)}**\n\n")
 
     def run_youtube_sentiment():
         analyzer = YouTubeSentimentAnalyzer()
         data_path = "data/youtube_data.raw"
         result = analyzer.analyze_file(data_path)
-        print(f"Average sentiment score: {result['average_score']}")
-        print(f"Processed {result['num_entries']} entries.")
+        print(f"Average sentiment score: {round(result['average_score'], 2)}")
 
     run_youtube_sentiment()
 

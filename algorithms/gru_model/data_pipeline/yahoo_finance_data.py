@@ -54,5 +54,4 @@ class YahooFinanceDataPuller:
         """Save data to CSV file"""
         filename = f"{self.data_dir}/{symbol}.csv"
         data.to_csv(filename, index=False)
-        print(f"Data saved to {filename}")
     
