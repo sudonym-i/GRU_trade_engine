@@ -1,4 +1,4 @@
-CUDA available: False
-No CUDA device detected. Running on CPU or integrated graphics.
-Average sentiment score: 0.9794037072889267
+CUDA available: True
+CUDA device: NVIDIA GeForce RTX 3050 Laptop GPU
+Average sentiment score: 0.9794037515117276
 Processed 62 entries.

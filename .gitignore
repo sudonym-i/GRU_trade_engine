@@ -1,5 +1,5 @@
 .venv
 .claude
 __pycache__
-
+params.txt
 .discord_webhook

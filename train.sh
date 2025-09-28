@@ -144,5 +144,13 @@ if [[ "$train_gru" == "y" || "$train_gru" == "Y" ]]; then
     python3 main.py --mode t --symbol "$stock_ticker" --epochs 30 --batch_size 3 --lr 0.001
 fi
 
+
+rm params.txt
+touch params.txt
+echo "stock_ticker=$stock_ticker" >> params.txt
+echo "company_name=$company_name" >> params.txt
+
+
+
 echo -e "${SUCCESS}Training workflow complete!${NC}"
 

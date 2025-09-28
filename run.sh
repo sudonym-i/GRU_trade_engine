@@ -1,17 +1,26 @@
+
 source .venv/bin/activate
 
-    # 1. Run GRU prediction
+# Read parameters from params.txt
+if [ -f params.txt ]; then
+    stock_ticker=$(grep '^stock_ticker=' params.txt | cut -d'=' -f2)
+    company_name=$(grep '^company_name=' params.txt | cut -d'=' -f2)
+else
+    echo "params.txt not found!" >&2
+    exit 1
+fi
+
+# 1. Run GRU prediction
 python3 main.py --mode p --symbol "$stock_ticker" > gru_prediction.out
 
-    # 2. Run webscraper (C++ program)
-"$home"/algorithms/sentiment_model/web_scraper/build/webscrape.exe data "$semantic_name"
+# 2. Run webscraper (C++ program)
+"$(pwd)"/algorithms/sentiment_model/web_scraper/build/webscrape.exe data "$company_name"
 
-    # 3. Run sentiment analysis (assuming main.py or another script)
+# 3. Run sentiment analysis
 python3 main.py --mode s --symbol "$stock_ticker" > sentiment_analysis.out
 
-    # 4. Send results to Discord using main.py (add a CLI option for this if needed)
+# 4. Send results to Discord
 python3 main.py --mode discord --symbol "$stock_ticker" --prediction_file gru_prediction.out --sentiment_file sentiment_analysis.out
-
 
 echo -e "${SUCCESS}Runthrough complete!${NC}"
 

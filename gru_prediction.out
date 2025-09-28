@@ -1,2 +1,13 @@
-CUDA available: False
-No CUDA device detected. Running on CPU or integrated graphics.
+CUDA available: True
+CUDA device: NVIDIA GeForce RTX 3050 Laptop GPU
+Fetching data for MSFT - Period: 3mo, Interval: 1d
+Successfully fetched 64 records for MSFT
+Data saved to data/MSFT.csv
+
+The past 10 day window: 
+[515.35998535 509.04000854 510.01998901 508.45001221 517.92999268
+ 514.45001221 509.23001099 510.1499939  507.02999878 511.45999146]
+
+Predicted future closing price: 506.07776734159415
+Average sentiment score: 0.9794037515117276
+Processed 62 entries.
