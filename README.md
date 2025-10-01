@@ -1,6 +1,8 @@
 
 # GRU Trade Engine
 
+**Deployed at https://discord.gg/zfavbh9pF**
+
 GRU Trade Engine is an automated stock prediction and sentiment analysis system. It combines deep learning (GRU neural networks) for time series price prediction with sentiment analysis from YouTube transcripts, and can send results to Discord. The workflow is orchestrated via shell scripts for training, prediction, and notification.
 
 

@@ -81,7 +81,7 @@ def main():
             except Exception as e:
                 sentiment_text = f"Error reading sentiment file: {e}"
         # Format message
-        message = f" Price Prediction:\n{prediction_text}\n YouTube Sentiment Analysis:\n{sentiment_text}"
+        message = f" Price Prediction:\n{prediction_text}\n\n\n YouTube Sentiment Analysis:\n{sentiment_text}"
         # Send to Discord
         success = send_discord_message(message)
         if success:
