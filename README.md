@@ -11,18 +11,21 @@ GRU_trade_engine/
 ├── main.py                        # Main entry point: train, predict, sentiment, Discord notification
 ├── run.sh                         # End-to-end workflow: prediction, scraping, sentiment, Discord
 ├── setup.sh                       # Interactive training/setup script
-├── params.txt                     # Stores last-used ticker/company
-├── gru_prediction.out             # Output from GRU prediction
-├── sentiment_analysis.out         # Output from sentiment analysis
-├── data/                          # Data storage (CSV, raw transcripts)
-│   ├── *.csv                      # Stock price data
-│   └── youtube_data.raw           # Scraped YouTube transcript data
+├── data/                          # Data storage (CSV, raw transcripts, outputs)
+│   ├── *.csv                      # Stock price data (e.g., AAPL.csv, MSFT.csv, ORCL.csv)
+│   ├── youtube_data.raw           # Scraped YouTube transcript data
+│   ├── params.txt                 # Stores last-used ticker/company
+│   └── output/                    # Prediction and analysis results
+│       ├── gru_prediction.out     # Output from GRU prediction
+│       └── sentiment_analysis.out # Output from sentiment analysis
 ├── algorithms/
 │   ├── requirements.txt           # Python dependencies
 │   ├── gru_model/
+│   │   ├── __init__.py            # Package init
 │   │   ├── gru_object.py          # GRU model wrapper
 │   │   ├── gru_architecture.py    # GRU neural network (PyTorch)
 │   │   ├── train_gru.py           # Training loop
+│   │   ├── models/                # Trained model storage
 │   │   └── data_pipeline/
 │   │       ├── yahoo_finance_data.py # Yahoo Finance data puller
 │   │       └── formatify.py           # Feature engineering, indicators
@@ -30,9 +33,10 @@ GRU_trade_engine/
 │       ├── youtube_sentiment.py   # Sentiment analysis (transformers)
 │       └── web_scraper/
 │           ├── main.cpp           # C++ web scraper for YouTube transcripts
-│           ├── scraper.cpp/h      # Scraper logic
+│           ├── scraper.cpp        # Scraper logic
+│           ├── scraper.h          # Scraper header
 │           ├── CMakeLists.txt     # Build config
-│           └── build/webscrape.exe# Built executable
+│           └── build/             # Built executable (webscrape)
 └── README.md
 ```
 
@@ -89,7 +93,7 @@ python3 main.py --mode p --symbol AAPL
 python3 main.py --mode s --symbol AAPL
 
 # Send results to Discord
-python3 main.py --mode discord --symbol AAPL --prediction_file gru_prediction.out --sentiment_file sentiment_analysis.out
+python3 main.py --mode discord --symbol AAPL --prediction_file data/output/gru_prediction.out --sentiment_file data/output/sentiment_analysis.out
 ```
 
 ---
@@ -98,9 +102,11 @@ python3 main.py --mode discord --symbol AAPL --prediction_file gru_prediction.ou
 ## Notes
 - All Python dependencies are listed in `algorithms/requirements.txt`.
 - C++ scraper requires `libcurl` and `fmt` libraries.
-- Data and model files are stored in `data/` and `algorithms/gru_model/models/`.
-- Parameters for last run are stored in `params.txt`.
-- **These depenencies can be automatically installed in the walkthrough when you run setup.sh**
+- Stock data CSV files are stored in `data/`.
+- Trained model files are stored in `algorithms/gru_model/models/`.
+- Output files (predictions and sentiment) are stored in `data/output/`.
+- Parameters for last run are stored in `data/params.txt`.
+- **These dependencies can be automatically installed in the walkthrough when you run setup.sh**
 
 ## Contact
 For questions or contributions, please open an issue or pull request on GitHub.
