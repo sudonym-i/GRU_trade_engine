@@ -1,3 +1,3 @@
-/home/sudonym/GRU_trade_engine/algorithms/sentiment_model/web_scraper/build/CMakeFiles/webscrape.exe.dir
-/home/sudonym/GRU_trade_engine/algorithms/sentiment_model/web_scraper/build/CMakeFiles/edit_cache.dir
-/home/sudonym/GRU_trade_engine/algorithms/sentiment_model/web_scraper/build/CMakeFiles/rebuild_cache.dir
+/home/isaac/home/projects/GRU_trade_engine/algorithms/sentiment_model/web_scraper/build/CMakeFiles/webscrape.exe.dir
+/home/isaac/home/projects/GRU_trade_engine/algorithms/sentiment_model/web_scraper/build/CMakeFiles/edit_cache.dir
+/home/isaac/home/projects/GRU_trade_engine/algorithms/sentiment_model/web_scraper/build/CMakeFiles/rebuild_cache.dir

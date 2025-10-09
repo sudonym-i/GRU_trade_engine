@@ -1,20 +1,20 @@
-Fetching data for MSFT - Period: 3mo, Interval: 1d
-Successfully fetched 64 records for MSFT
+Fetching data for AMD - Period: 3mo, Interval: 1d
+Successfully fetched 65 records for AMD
 
 The past 10 day window: 
 
- -> 515.36
- -> 509.04
- -> 510.02
- -> 508.45
- -> 517.93
- -> 514.45
- -> 509.23
- -> 510.15
- -> 507.03
- -> 511.46
+ -> 161.27
+ -> 159.46
+ -> 161.36
+ -> 161.79
+ -> 164.01
+ -> 169.73
+ -> 164.67
+ -> 203.71
+ -> 211.51
+ -> 235.56
 
 
-**Predicted future closing price: 511.75**
+**Predicted future closing price: 196.29**
 
 

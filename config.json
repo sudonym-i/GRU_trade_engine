@@ -1,0 +1,60 @@
+{
+  "stock": {
+    "ticker": "AMD",
+    "company_name": "AMD",
+    "data_period": "3mo",
+    "data_interval": "1d",
+    "training_period": "max"
+  },
+  "model": {
+    "gru": {
+      "input_size": 12,
+      "hidden_size": 256,
+      "output_size": 1,
+      "num_layers": 3,
+      "dropout": 0.35,
+      "sequence_length": 60,
+      "model_path": "algorithms/gru_model/models/gru_model.pth"
+    },
+    "sentiment": {
+      "model_name": "distilbert-base-uncased-finetuned-sst-2-english",
+      "max_text_length": 512
+    }
+  },
+  "training": {
+    "mode": "transfer_learning",
+    "epochs": 25,
+    "learning_rate": 0.0001,
+    "batch_size": 32,
+    "pretrain_stocks": [
+      "NVDA",
+      "AAPL",
+      "INTC",
+      "TSLA",
+      "IBM"
+    ],
+    "pretrain_epochs": 40,
+    "pretrain_lr": 0.0005,
+    "finetune_epochs": 25,
+    "finetune_lr": 0.0001,
+    "validation_split": 0.2,
+    "pretrained_model_path": "algorithms/gru_model/models/pretrained_gru.pth"
+  },
+  "paths": {
+    "data_dir": "data",
+    "output_dir": "data/output",
+    "prediction_output": "data/output/gru_prediction.out",
+    "sentiment_output": "data/output/sentiment_analysis.out",
+    "youtube_data": "data/youtube_data.raw",
+    "discord_webhook_file": ".discord_webhook",
+    "webscraper_executable": "algorithms/sentiment_model/web_scraper/build/webscrape.exe"
+  },
+  "discord": {
+    "enabled": true,
+    "webhook_url": ""
+  },
+  "execution": {
+    "mode": "predict",
+    "use_gpu": true
+  }
+}

@@ -1,7 +1,8 @@
-from algorithms.gru_model.train_gru import train_gru_model
+from algorithms.gru_model.train_gru import train_gru_model, load_pretrained_weights
 from algorithms.gru_model.gru_architecture import GRUPredictor
 from algorithms.gru_model.data_pipeline.formatify import format_dataframe_for_gru
 from algorithms.gru_model.data_pipeline.yahoo_finance_data import YahooFinanceDataPuller
+from algorithms.gru_model.data_pipeline.multi_stock_loader import pull_multiple_stocks, format_multi_stock_data
 import numpy as np
 import torch
 
@@ -10,23 +11,33 @@ class GRUModel:
     Wrapper for GRU model functionality.
 
     Usage:
-        wrapper = GRUModelWrapper(input_size, hidden_size, output_size)
+        wrapper = GRUModel(input_size, hidden_size, output_size, config)
         formatted_data = wrapper.format_data(raw_data)
         wrapper.train(formatted_data, epochs=10, lr=0.001)
         predictions = wrapper.predict(input_data)
     """
 
-
-
-    def __init__(self, input_size=5, hidden_size=64, output_size=1):
+    def __init__(self, input_size=5, hidden_size=64, output_size=1, config=None):
         """
         Args:
             input_size (int): Number of input features (default 5 for OHLCV: Open, High, Low, Close, Volume)
             hidden_size (int): Number of hidden units in GRU.
             output_size (int): Number of output features.
+            config: ConfigLoader instance (optional)
         """
+        self.config = config
         self.input_size = input_size
-        self.model = GRUPredictor(self.input_size, hidden_size=64, num_layers=2, dropout=0.2)
+
+        # Get GRU config if available
+        if config:
+            gru_config = config.get_gru_config()
+            num_layers = gru_config.get('num_layers', 2)
+            dropout = gru_config.get('dropout', 0.2)
+        else:
+            num_layers = 2
+            dropout = 0.2
+
+        self.model = GRUPredictor(self.input_size, hidden_size=hidden_size, num_layers=num_layers, dropout=dropout)
         self.data_dir = "./data"
         self.raw_data = None
         self.input_tensor = None
@@ -55,11 +66,28 @@ class GRUModel:
         return None
 
 
-    def train(self, epochs=10, lr=0.001, batch_size=32):
+    def train(self, epochs=10, lr=0.001, batch_size=32, val_tensor=None, val_target=None):
+        """
+        Train the GRU model on formatted data.
+
+        Args:
+            epochs: Number of training epochs.
+            lr: Learning rate.
+            batch_size: Batch size.
+            val_tensor: Validation input tensor (optional).
+            val_target: Validation target tensor (optional).
+
+        Returns:
+            Training history dictionary.
+        """
         import torch
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        train_gru_model(self.model, self.input_tensor, self.target_tensor, epochs, lr, batch_size, device=device)
-        return None
+        history = train_gru_model(
+            self.model, self.input_tensor, self.target_tensor,
+            epochs, lr, batch_size, device=device,
+            val_tensor=val_tensor, val_target=val_target
+        )
+        return history
 
     def predict(self, input_tensor = None):
         """
@@ -135,3 +163,130 @@ class GRUModel:
     def load_model(self, filepath : str = "algorithms/gru_model/models/cached_gru_model.pth"):
         self.model.load_state_dict(torch.load(filepath))
         return None
+
+    def pretrain_on_multiple_stocks(self, stock_symbols, period="3y", interval="1d",
+                                      epochs=40, lr=0.0005, batch_size=32, validation_split=0.2):
+        """
+        Pre-train the model on multiple stocks for transfer learning.
+
+        Args:
+            stock_symbols: List of stock ticker symbols.
+            period: Data period for each stock.
+            interval: Data interval.
+            epochs: Number of pre-training epochs.
+            lr: Pre-training learning rate.
+            batch_size: Batch size.
+            validation_split: Fraction of data for validation.
+
+        Returns:
+            Training history dictionary.
+        """
+        print(f"\n{'='*60}")
+        print("PHASE 1: PRE-TRAINING ON MULTIPLE STOCKS")
+        print(f"{'='*60}\n")
+
+        # Pull data for multiple stocks
+        stock_data = pull_multiple_stocks(
+            stock_symbols,
+            period=period,
+            interval=interval,
+            data_dir=self.data_dir
+        )
+
+        if not stock_data:
+            print("Error: No stock data loaded. Cannot pre-train.")
+            return None
+
+        # Get sequence length from config
+        if self.config:
+            gru_config = self.config.get_gru_config()
+            sequence_length = gru_config.get('sequence_length', 60)
+        else:
+            sequence_length = 60
+
+        # Format data for training
+        train_tensor, train_target, val_tensor, val_target, scaler_dict, feature_cols = \
+            format_multi_stock_data(stock_data, sequence_length=sequence_length,
+                                    validation_split=validation_split)
+
+        # Train the model
+        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        history = train_gru_model(
+            self.model, train_tensor, train_target,
+            epochs=epochs, lr=lr, batch_size=batch_size,
+            device=device, val_tensor=val_tensor, val_target=val_target
+        )
+
+        print(f"\n{'='*60}")
+        print("PRE-TRAINING COMPLETE")
+        print(f"Final Train Loss: {history['train_losses'][-1]:.4f}")
+        if history['val_losses']:
+            print(f"Final Val Loss: {history['val_losses'][-1]:.4f}")
+        print(f"{'='*60}\n")
+
+        return history
+
+    def finetune_on_target_stock(self, symbol, period="3y", interval="1d",
+                                  epochs=25, lr=0.0001, batch_size=32,
+                                  pretrained_path=None, validation_split=0.2):
+        """
+        Fine-tune a pre-trained model on a specific target stock.
+
+        Args:
+            symbol: Target stock ticker symbol.
+            period: Data period.
+            interval: Data interval.
+            epochs: Number of fine-tuning epochs.
+            lr: Fine-tuning learning rate (typically lower than pre-training).
+            batch_size: Batch size.
+            pretrained_path: Path to pre-trained weights (optional).
+            validation_split: Fraction of data for validation.
+
+        Returns:
+            Training history dictionary.
+        """
+        print(f"\n{'='*60}")
+        print(f"PHASE 2: FINE-TUNING ON TARGET STOCK ({symbol})")
+        print(f"{'='*60}\n")
+
+        # Load pre-trained weights if provided
+        if pretrained_path:
+            device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+            self.model = load_pretrained_weights(self.model, pretrained_path, device)
+
+        # Pull and format data for target stock
+        self.pull_data(symbol=symbol, period=period, interval=interval)
+        self.format_data(for_training=True)
+
+        # Split into train and validation
+        total_samples = len(self.input_tensor)
+        split_idx = int(total_samples * (1 - validation_split))
+
+        train_tensor = self.input_tensor[:split_idx]
+        train_target = self.target_tensor[:split_idx]
+        val_tensor = self.input_tensor[split_idx:]
+        val_target = self.target_tensor[split_idx:]
+
+        print(f"Training samples: {len(train_tensor)}")
+        print(f"Validation samples: {len(val_tensor)}\n")
+
+        # Fine-tune the model with lower learning rate
+        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        history = train_gru_model(
+            self.model, train_tensor, train_target,
+            epochs=epochs, lr=lr, batch_size=batch_size,
+            device=device, val_tensor=val_tensor, val_target=val_target
+        )
+
+        # Update stored tensors to full dataset for prediction
+        self.input_tensor = torch.cat([train_tensor, val_tensor], dim=0)
+        self.target_tensor = torch.cat([train_target, val_target], dim=0)
+
+        print(f"\n{'='*60}")
+        print("FINE-TUNING COMPLETE")
+        print(f"Final Train Loss: {history['train_losses'][-1]:.4f}")
+        if history['val_losses']:
+            print(f"Final Val Loss: {history['val_losses'][-1]:.4f}")
+        print(f"{'='*60}\n")
+
+        return history

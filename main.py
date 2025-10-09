@@ -1,47 +1,45 @@
 # This imports all of the ML objects, allowing us to control what we do wth these models
 from algorithms.gru_model.gru_object import GRUModel
 from algorithms.sentiment_model.youtube_sentiment import YouTubeSentimentAnalyzer
+from config_loader import get_config
 
 import torch
 import argparse
-
 import requests
 import os
 
-
-
-# ============================
-symbol = 'MSFT'
-input_size = 12  # OHLCV
-hidden_size = 2048
-output_size = 1
-sequence_length = 150
-# ============================
-
-def run_youtube_sentiment():
-        analyzer = YouTubeSentimentAnalyzer()
-        data_path = "data/youtube_data.raw"
+def run_youtube_sentiment(config):
+        analyzer = YouTubeSentimentAnalyzer(config)
+        data_path = config.get('paths', 'youtube_data')
         result = analyzer.analyze_file(data_path)
         print(f"\n**Average sentiment score: {round(result['average_score'], 2)}/1**\n")
 
 
-# Discord webhook URL (read from .discord_webhook file if present, else env variable)
-def get_discord_webhook_url():
+# Discord webhook URL (read from config, .discord_webhook file, or env variable)
+def get_discord_webhook_url(config):
+    # Try config first
+    webhook_url = config.get('discord', 'webhook_url')
+    if webhook_url:
+        return webhook_url
+
+    # Try .discord_webhook file
+    webhook_file = config.get('paths', 'discord_webhook_file', default='.discord_webhook')
     try:
-        with open('.discord_webhook', 'r') as f:
+        with open(webhook_file, 'r') as f:
             return f.read().strip()
     except Exception:
-        return os.getenv("DISCORD_WEBHOOK_URL", "")
+        pass
 
-DISCORD_WEBHOOK_URL = get_discord_webhook_url()
+    # Fall back to environment variable
+    return os.getenv("DISCORD_WEBHOOK_URL", "")
 
-def send_discord_message(message: str):
+def send_discord_message(message: str, webhook_url: str):
     """
     Send a plain text message to Discord using a webhook.
     """
     data = {"content": message}
     try:
-        response = requests.post(DISCORD_WEBHOOK_URL, json=data)
+        response = requests.post(webhook_url, json=data)
         response.raise_for_status()
     except Exception as e:
         print(f"Failed to send Discord message: {e}")
@@ -50,61 +48,156 @@ def send_discord_message(message: str):
 
 
 def main():
+    # Load configuration
+    config = get_config()
 
-    parser = argparse.ArgumentParser(description="GRU Trade Engine")
-    parser.add_argument('--mode', choices=['t', 'p', 's', 'discord'], required=True, help="Mode: t=train, p=predict, s=skip GRU model, discord=send results to Discord")
-    parser.add_argument('--symbol', type=str, default=symbol, help="Stock symbol")
-    parser.add_argument('--epochs', type=int, default=30, help="Epochs for training")
-    parser.add_argument('--lr', type=float, default=0.001, help="Learning rate for training")
-    parser.add_argument('--batch_size', type=int, default=1, help="Batch size for training")
-    parser.add_argument('--prediction_file', type=str, help="Path to GRU prediction output file (for Discord mode)")
-    parser.add_argument('--sentiment_file', type=str, help="Path to sentiment analysis output file (for Discord mode)")
+    # Parse command line arguments (only for mode override)
+    parser = argparse.ArgumentParser(description="GRU Trade Engine - Config-driven ML trading system")
+    parser.add_argument('--mode', choices=['t', 'p', 's', 'discord', 'pretrain', 'finetune'],
+                        help="Mode: t=train, p=predict, s=sentiment only, pretrain=pre-train on multiple stocks, finetune=fine-tune on target stock, discord=send to Discord (overrides config)")
+    parser.add_argument('--config', type=str, default='config.json', help="Path to config file")
     args = parser.parse_args()
 
-    mode = args.mode
-    symbol_arg = args.symbol
+    # Use mode from args if provided, otherwise use from config
+    mode = args.mode if args.mode else config.get('execution', 'mode', default='predict')
+
+    # Get all configuration values
+    stock_config = config.get_stock_config()
+    gru_config = config.get_gru_config()
+    training_config = config.get_training_config()
+    paths_config = config.get_paths_config()
+
+    symbol_arg = stock_config.get('ticker', 'MSFT')
+    input_size = gru_config.get('input_size', 12)
+    hidden_size = gru_config.get('hidden_size', 2048)
+    output_size = gru_config.get('output_size', 1)
 
     if mode == 'discord':
-        # Read prediction and sentiment output files
+        # Read prediction and sentiment output files from config
         prediction_text = ""
         sentiment_text = ""
-        if args.prediction_file:
+        prediction_file = paths_config.get('prediction_output')
+        sentiment_file = paths_config.get('sentiment_output')
+
+        if prediction_file:
             try:
-                with open(args.prediction_file, 'r') as f:
+                with open(prediction_file, 'r') as f:
                     prediction_text = f.read().strip()
             except Exception as e:
                 prediction_text = f"Error reading prediction file: {e}"
-        if args.sentiment_file:
+        if sentiment_file:
             try:
-                with open(args.sentiment_file, 'r') as f:
+                with open(sentiment_file, 'r') as f:
                     sentiment_text = f.read().strip()
             except Exception as e:
                 sentiment_text = f"Error reading sentiment file: {e}"
+
         # Format message
         message = f" Price Prediction:\n{prediction_text}\n\n\n YouTube Sentiment Analysis:\n{sentiment_text}"
-        # Send to Discord
-        success = send_discord_message(message)
+
+        # Get webhook URL and send to Discord
+        webhook_url = get_discord_webhook_url(config)
+        success = send_discord_message(message, webhook_url)
         if success:
             print("Discord message sent successfully.")
         else:
             print("Failed to send Discord message.")
         return
 
-    if mode != 's' and mode == 't':
-        # ---------- TRAIN MODEL -------------
-        gru_model = GRUModel(input_size, hidden_size, output_size)
-        gru_model.data_dir = "data"
-        gru_model.pull_data(symbol=symbol_arg, period="max")
+    if mode == 'pretrain':
+        # ---------- PRE-TRAIN ON MULTIPLE STOCKS -------------
+        print(f"\n{'='*60}")
+        print("STARTING PRE-TRAINING WORKFLOW")
+        print(f"{'='*60}\n")
+
+        gru_model = GRUModel(input_size, hidden_size, output_size, config)
+        gru_model.data_dir = paths_config.get('data_dir', 'data')
+
+        # Get pre-training configuration
+        pretrain_stocks = training_config.get('pretrain_stocks', ['AMD', 'NVDA', 'INTC', 'TSM'])
+        pretrain_epochs = training_config.get('pretrain_epochs', 40)
+        pretrain_lr = training_config.get('pretrain_lr', 0.0005)
+        batch_size = training_config.get('batch_size', 32)
+        validation_split = training_config.get('validation_split', 0.2)
+        training_period = stock_config.get('training_period', 'max')
+
+        # Pre-train on multiple stocks
+        gru_model.pretrain_on_multiple_stocks(
+            stock_symbols=pretrain_stocks,
+            period=training_period,
+            epochs=pretrain_epochs,
+            lr=pretrain_lr,
+            batch_size=batch_size,
+            validation_split=validation_split
+        )
+
+        # Save pre-trained model
+        pretrained_path = training_config.get('pretrained_model_path',
+                                               'algorithms/gru_model/models/pretrained_gru.pth')
+        gru_model.save_model(pretrained_path)
+        print(f"\n✓ Pre-trained model saved to: {pretrained_path}\n")
+
+    elif mode == 'finetune':
+        # ---------- FINE-TUNE ON TARGET STOCK -------------
+        print(f"\n{'='*60}")
+        print("STARTING FINE-TUNING WORKFLOW")
+        print(f"{'='*60}\n")
+
+        gru_model = GRUModel(input_size, hidden_size, output_size, config)
+        gru_model.data_dir = paths_config.get('data_dir', 'data')
+
+        # Get fine-tuning configuration
+        finetune_epochs = training_config.get('finetune_epochs', 25)
+        finetune_lr = training_config.get('finetune_lr', 0.0001)
+        batch_size = training_config.get('batch_size', 32)
+        validation_split = training_config.get('validation_split', 0.2)
+        training_period = stock_config.get('training_period', 'max')
+        pretrained_path = training_config.get('pretrained_model_path',
+                                               'algorithms/gru_model/models/pretrained_gru.pth')
+
+        # Fine-tune on target stock
+        gru_model.finetune_on_target_stock(
+            symbol=symbol_arg,
+            period=training_period,
+            epochs=finetune_epochs,
+            lr=finetune_lr,
+            batch_size=batch_size,
+            pretrained_path=pretrained_path,
+            validation_split=validation_split
+        )
+
+        # Save fine-tuned model
+        model_path = gru_config.get('model_path', 'algorithms/gru_model/models/gru_model.pth')
+        gru_model.save_model(model_path)
+        print(f"\n✓ Fine-tuned model saved to: {model_path}\n")
+
+    elif mode != 's' and mode == 't':
+        # ---------- STANDARD TRAIN MODEL (SINGLE STOCK) -------------
+        gru_model = GRUModel(input_size, hidden_size, output_size, config)
+        gru_model.data_dir = paths_config.get('data_dir', 'data')
+        gru_model.pull_data(
+            symbol=symbol_arg,
+            period=stock_config.get('training_period', 'max')
+        )
         gru_model.format_data()
-        gru_model.train(epochs=args.epochs, lr=args.lr, batch_size=args.batch_size)
-        gru_model.save_model(f"algorithms/gru_model/models/gru_model.pth")
+        gru_model.train(
+            epochs=training_config.get('epochs', 30),
+            lr=training_config.get('learning_rate', 0.001),
+            batch_size=training_config.get('batch_size', 1)
+        )
+        model_path = gru_config.get('model_path', 'algorithms/gru_model/models/gru_model.pth')
+        gru_model.save_model(model_path)
 
     elif mode != 's' and mode == 'p':
         # -------------- PREDICT ------------
-        gru_model = GRUModel(input_size, hidden_size, output_size)
-        gru_model.data_dir = "data"
-        gru_model.load_model(f"algorithms/gru_model/models/gru_model.pth")
-        gru_model.pull_data(symbol=symbol_arg, period="3mo")
+        gru_model = GRUModel(input_size, hidden_size, output_size, config)
+        gru_model.data_dir = paths_config.get('data_dir', 'data')
+        model_path = gru_config.get('model_path', 'algorithms/gru_model/models/gru_model.pth')
+        gru_model.load_model(model_path)
+        gru_model.pull_data(
+            symbol=symbol_arg,
+            period=stock_config.get('data_period', '3mo')
+        )
         gru_model.format_data()
         gru_model.predict()
         price_prediction = gru_model.un_normalize()[-1]
@@ -115,7 +208,7 @@ def main():
         print(f"\n\n**Predicted future closing price: {round(price_prediction, 2)}**\n\n")
 
     if mode == 's':
-        run_youtube_sentiment()
+        run_youtube_sentiment(config)
 
 #testing
 if __name__ == "__main__":
