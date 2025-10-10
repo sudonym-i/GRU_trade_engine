@@ -1,9 +1,8 @@
-Fetching data for AMD - Period: 3mo, Interval: 1d
-Successfully fetched 65 records for AMD
+Fetching data for AMD - Period: 1y, Interval: 1d
+Successfully fetched 250 records for AMD
 
-The past 10 day window: 
+Recent price history (last 10 days): 
 
- -> 161.27
  -> 159.46
  -> 161.36
  -> 161.79
@@ -13,8 +12,10 @@ The past 10 day window:
  -> 203.71
  -> 211.51
  -> 235.56
+ -> 232.89
 
 
-**Predicted future closing price: 196.29**
-
+Current closing price: $232.89
+**Predicted next-day closing price: $151.56**
+Predicted change: ↓ $81.33 (-34.92%)
 

@@ -198,14 +198,45 @@ def main():
             symbol=symbol_arg,
             period=stock_config.get('data_period', '3mo')
         )
-        gru_model.format_data()
-        gru_model.predict()
-        price_prediction = gru_model.un_normalize()[-1]
-        print(f"\nThe past 10 day window: \n")
-        for price in gru_model.raw_data['Close'].tail(10).values:
+        # Use existing scaler from loaded model for prediction
+        gru_model.format_data(for_training=False, use_existing_scaler=True)
+
+        # Predict only from the most recent sequence
+        gru_model.predict(predict_last_only=True)
+
+        # DEBUG: Show normalized prediction value
+        normalized_prediction = gru_model.output_tensor.item()
+        print(f"\n[DEBUG] Normalized prediction value: {normalized_prediction:.6f}")
+
+        # Get the prediction (only one value now)
+        price_prediction = gru_model.un_normalize()[0]
+
+        # Get current price and recent history
+        current_price = gru_model.raw_data['Close'].iloc[-1]
+        last_10_prices = gru_model.raw_data['Close'].tail(10).values
+
+        # DEBUG: Show scaler range
+        if gru_model.scaler is not None:
+            close_idx = 3  # 'Close' is at index 3 in OHLCV
+            scaler_min = gru_model.scaler.data_min_[close_idx]
+            scaler_max = gru_model.scaler.data_max_[close_idx]
+            print(f"[DEBUG] Scaler range for 'Close': ${scaler_min:.2f} - ${scaler_max:.2f}")
+            print(f"[DEBUG] Current price normalized: {(current_price - scaler_min) / (scaler_max - scaler_min):.6f}")
+
+        print(f"\nRecent price history (last 10 days): \n")
+        for price in last_10_prices:
             print(f" -> {round(price, 2)}")
 
-        print(f"\n\n**Predicted future closing price: {round(price_prediction, 2)}**\n\n")
+        print(f"\n")
+        print(f"Current closing price: ${round(current_price, 2)}")
+        print(f"**Predicted next-day closing price: ${round(price_prediction, 2)}**")
+
+        # Show prediction change
+        change = price_prediction - current_price
+        change_pct = (change / current_price) * 100
+        direction = "↑" if change > 0 else "↓"
+        print(f"Predicted change: {direction} ${abs(round(change, 2))} ({round(change_pct, 2)}%)")
+        print()
 
     if mode == 's':
         run_youtube_sentiment(config)

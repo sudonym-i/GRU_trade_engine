@@ -56,4 +56,5 @@ class GRUPredictor(nn.Module):
         output = self.relu(self.fc1(last_output))
         output = self.dropout(output)
         output = self.fc2(output)
+        # No activation on output - we want unbounded predictions for normalized data
         return output  # Return all predictions in the batch

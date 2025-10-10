@@ -214,6 +214,16 @@ config['training']['finetune_lr'] = float($finetune_lr)
 config['training']['validation_split'] = 0.2
 config['training']['pretrained_model_path'] = 'algorithms/gru_model/models/pretrained_gru.pth'
 
+# Preserve or add loss_function configuration
+if 'loss_function' not in config['training']:
+    config['training']['loss_function'] = {
+        'type': 'directional',
+        'mse_weight': 0.3,
+        'direction_weight': 0.5,
+        'bias_weight': 0.2,
+        'direction_penalty': 2.0
+    }
+
 # Save updated config
 with open('config.json', 'w') as f:
     json.dump(config, f, indent=2)
@@ -244,6 +254,16 @@ config['training']['mode'] = 'standard'
 config['training']['epochs'] = int($epochs)
 config['training']['learning_rate'] = float($learning_rate)
 config['training']['batch_size'] = int($batch_size)
+
+# Preserve or add loss_function configuration
+if 'loss_function' not in config['training']:
+    config['training']['loss_function'] = {
+        'type': 'directional',
+        'mse_weight': 0.3,
+        'direction_weight': 0.5,
+        'bias_weight': 0.2,
+        'direction_penalty': 2.0
+    }
 
 # Save updated config
 with open('config.json', 'w') as f:

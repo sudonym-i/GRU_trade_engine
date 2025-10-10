@@ -2,7 +2,7 @@
   "stock": {
     "ticker": "AMD",
     "company_name": "AMD",
-    "data_period": "3mo",
+    "data_period": "1y",
     "data_interval": "1d",
     "training_period": "max"
   },
@@ -27,18 +27,27 @@
     "learning_rate": 0.0001,
     "batch_size": 32,
     "pretrain_stocks": [
+      "AMD",
       "NVDA",
-      "AAPL",
       "INTC",
-      "TSLA",
-      "IBM"
+      "TSM",
+      "MU",
+      "QCOM",
+      "AVGO"
     ],
     "pretrain_epochs": 40,
     "pretrain_lr": 0.0005,
     "finetune_epochs": 25,
     "finetune_lr": 0.0001,
     "validation_split": 0.2,
-    "pretrained_model_path": "algorithms/gru_model/models/pretrained_gru.pth"
+    "pretrained_model_path": "algorithms/gru_model/models/pretrained_gru.pth",
+    "loss_function": {
+      "type": "directional",
+      "mse_weight": 0.3,
+      "direction_weight": 0.5,
+      "bias_weight": 0.2,
+      "direction_penalty": 2.0
+    }
   },
   "paths": {
     "data_dir": "data",

@@ -46,19 +46,34 @@ class GRUModel:
         self.output_tensor = None
 
 
-    def format_data(self, for_training: bool = True):
+    def format_data(self, for_training: bool = True, use_existing_scaler: bool = False):
         """
         Format raw data for GRU model input.
 
         Args:
-            raw_data: Raw input data (e.g., DataFrame).
+            for_training: If True, create target tensors for training
+            use_existing_scaler: If True, use the existing scaler (for prediction with loaded model)
         Returns:
-            Formatted data suitable for GRU traini`ng/prediction.
+            Formatted data suitable for GRU training/prediction.
         """
-        if for_training:
-            self.input_tensor, self.target_tensor, self.scaler, feature_cols = format_dataframe_for_gru(self.raw_data)
+        # Get sequence length from config
+        if self.config:
+            gru_config = self.config.get_gru_config()
+            sequence_length = gru_config.get('sequence_length', 60)
         else:
-            self.input_tensor, _, self.scaler, feature_cols = format_dataframe_for_gru(self.raw_data)
+            sequence_length = 60
+
+        if for_training:
+            self.input_tensor, self.target_tensor, self.scaler, feature_cols = format_dataframe_for_gru(self.raw_data, sequence_length=sequence_length)
+        else:
+            # For prediction: use existing scaler if available
+            if use_existing_scaler and self.scaler is not None:
+                self.input_tensor, _, _, feature_cols = format_dataframe_for_gru(
+                    self.raw_data, sequence_length=sequence_length, scaler=self.scaler
+                )
+            else:
+                self.input_tensor, _, self.scaler, feature_cols = format_dataframe_for_gru(self.raw_data, sequence_length=sequence_length)
+
         # Set input size from feature columns if not already set
         if self.input_size is None:
             self.input_size = len(feature_cols)
@@ -82,19 +97,36 @@ class GRUModel:
         """
         import torch
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+        # Get loss function configuration from config
+        loss_type = 'directional'  # Default
+        loss_kwargs = {}
+
+        if self.config:
+            training_config = self.config.config.get('training', {})
+            loss_config = training_config.get('loss_function', {})
+            loss_type = loss_config.get('type', 'directional')
+
+            # Extract loss function parameters
+            for key in ['mse_weight', 'direction_weight', 'bias_weight', 'direction_penalty', 'temporal_decay', 'delta']:
+                if key in loss_config:
+                    loss_kwargs[key] = loss_config[key]
+
         history = train_gru_model(
             self.model, self.input_tensor, self.target_tensor,
             epochs, lr, batch_size, device=device,
-            val_tensor=val_tensor, val_target=val_target
+            val_tensor=val_tensor, val_target=val_target,
+            loss_type=loss_type, loss_kwargs=loss_kwargs
         )
         return history
 
-    def predict(self, input_tensor = None):
+    def predict(self, input_tensor = None, predict_last_only=False):
         """
         Make predictions using the trained GRU model.
 
         Args:
-            input_data: Formatted input data for prediction.
+            input_tensor: Formatted input data for prediction. If None, uses self.input_tensor
+            predict_last_only: If True, only predict from the last sequence (most recent data)
         Returns:
             Model predictions.
         """
@@ -105,8 +137,14 @@ class GRUModel:
         self.model.eval()  # Set model to evaluation mode
 
         with torch.no_grad():  # Disable gradient calculation for inference
-            self.output_tensor = self.model.forward(input_tensor)
-            
+            if predict_last_only:
+                # Only use the last sequence for prediction
+                last_sequence = input_tensor[-1:, :, :]  # Keep batch dimension
+                self.output_tensor = self.model.forward(last_sequence)
+            else:
+                # Predict for all sequences
+                self.output_tensor = self.model.forward(input_tensor)
+
         return self.output_tensor
 
     def pull_data(self, symbol: str, period: str = "3y", interval: str = "1d"):
@@ -128,9 +166,22 @@ class GRUModel:
 
         data = puller.get_stock_data(symbol, period, interval)
 
+        if data is None or len(data) == 0:
+            raise ValueError(f"Failed to fetch data for {symbol}")
+
         puller.save_to_csv(data , symbol)
 
         self.raw_data = data
+
+        # Validate we have enough data
+        if self.config:
+            gru_config = self.config.get_gru_config()
+            sequence_length = gru_config.get('sequence_length', 60)
+            # Account for ~26 rows lost to technical indicators
+            min_required = sequence_length + 30
+            if len(data) < min_required:
+                print(f"Warning: Only {len(data)} rows fetched. Recommend at least {min_required} rows for sequence_length={sequence_length}")
+                print(f"Consider increasing the data period in config.")
 
         return None;
 
@@ -157,11 +208,55 @@ class GRUModel:
         return result
 
     def save_model(self, filepath : str = "algorithms/gru_model/models/cached_gru_model.pth"):
+        """
+        Save model weights and scaler together.
+
+        Args:
+            filepath: Path to save the model (e.g., 'model.pth')
+        """
+        import pickle
+
+        # Save model state dict
         torch.save(self.model.state_dict(), filepath)
+
+        # Save scaler separately (if it exists)
+        if self.scaler is not None:
+            scaler_path = filepath.replace('.pth', '_scaler.pkl')
+            with open(scaler_path, 'wb') as f:
+                pickle.dump(self.scaler, f)
+            print(f"✓ Model saved to: {filepath}")
+            print(f"✓ Scaler saved to: {scaler_path}")
+        else:
+            print(f"✓ Model saved to: {filepath}")
+            print(f"⚠ Warning: No scaler to save (train model first)")
+
         return None
 
     def load_model(self, filepath : str = "algorithms/gru_model/models/cached_gru_model.pth"):
+        """
+        Load model weights and scaler together.
+
+        Args:
+            filepath: Path to the saved model (e.g., 'model.pth')
+        """
+        import pickle
+        import os
+
+        # Load model state dict
         self.model.load_state_dict(torch.load(filepath))
+        print(f"✓ Model loaded from: {filepath}")
+
+        # Load scaler if it exists
+        scaler_path = filepath.replace('.pth', '_scaler.pkl')
+        if os.path.exists(scaler_path):
+            with open(scaler_path, 'rb') as f:
+                self.scaler = pickle.load(f)
+            print(f"✓ Scaler loaded from: {scaler_path}")
+        else:
+            print(f"⚠ Warning: No scaler file found at {scaler_path}")
+            print(f"  Predictions will use a new scaler fitted on prediction data")
+            print(f"  This may cause prediction bias!")
+
         return None
 
     def pretrain_on_multiple_stocks(self, stock_symbols, period="3y", interval="1d",
@@ -209,12 +304,24 @@ class GRUModel:
             format_multi_stock_data(stock_data, sequence_length=sequence_length,
                                     validation_split=validation_split)
 
+        # Get loss function configuration
+        loss_type = 'directional'
+        loss_kwargs = {}
+        if self.config:
+            training_config = self.config.config.get('training', {})
+            loss_config = training_config.get('loss_function', {})
+            loss_type = loss_config.get('type', 'directional')
+            for key in ['mse_weight', 'direction_weight', 'bias_weight', 'direction_penalty', 'temporal_decay', 'delta']:
+                if key in loss_config:
+                    loss_kwargs[key] = loss_config[key]
+
         # Train the model
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         history = train_gru_model(
             self.model, train_tensor, train_target,
             epochs=epochs, lr=lr, batch_size=batch_size,
-            device=device, val_tensor=val_tensor, val_target=val_target
+            device=device, val_tensor=val_tensor, val_target=val_target,
+            loss_type=loss_type, loss_kwargs=loss_kwargs
         )
 
         print(f"\n{'='*60}")
@@ -270,12 +377,24 @@ class GRUModel:
         print(f"Training samples: {len(train_tensor)}")
         print(f"Validation samples: {len(val_tensor)}\n")
 
+        # Get loss function configuration
+        loss_type = 'directional'
+        loss_kwargs = {}
+        if self.config:
+            training_config = self.config.config.get('training', {})
+            loss_config = training_config.get('loss_function', {})
+            loss_type = loss_config.get('type', 'directional')
+            for key in ['mse_weight', 'direction_weight', 'bias_weight', 'direction_penalty', 'temporal_decay', 'delta']:
+                if key in loss_config:
+                    loss_kwargs[key] = loss_config[key]
+
         # Fine-tune the model with lower learning rate
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         history = train_gru_model(
             self.model, train_tensor, train_target,
             epochs=epochs, lr=lr, batch_size=batch_size,
-            device=device, val_tensor=val_tensor, val_target=val_target
+            device=device, val_tensor=val_tensor, val_target=val_target,
+            loss_type=loss_type, loss_kwargs=loss_kwargs
         )
 
         # Update stored tensors to full dataset for prediction

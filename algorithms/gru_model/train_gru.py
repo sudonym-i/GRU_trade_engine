@@ -1,5 +1,5 @@
 def train_gru_model(model, train_tensor, target_tensor, epochs=10, lr=0.001, batch_size=32, device=None,
-                    val_tensor=None, val_target=None, verbose=True):
+                    val_tensor=None, val_target=None, verbose=True, loss_type='directional', loss_kwargs=None):
     """
     Train a GRUStockPredictor model using formatted data.
 
@@ -14,12 +14,15 @@ def train_gru_model(model, train_tensor, target_tensor, epochs=10, lr=0.001, bat
         val_tensor: Validation input tensor (optional).
         val_target: Validation target tensor (optional).
         verbose (bool): Print training progress.
+        loss_type (str): Type of loss function ('mse', 'directional', 'weighted_mse', 'huber_directional').
+        loss_kwargs (dict): Additional arguments for the loss function.
 
     Returns:
         Dictionary with training history (train_losses, val_losses)
     """
     import torch
     from torch.utils.data import TensorDataset, DataLoader
+    from algorithms.gru_model.loss_functions import get_loss_function
 
     if device is None:
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -34,23 +37,44 @@ def train_gru_model(model, train_tensor, target_tensor, epochs=10, lr=0.001, bat
         val_target = val_target.to(device)
 
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
-    criterion = torch.nn.MSELoss()
-    dataset = TensorDataset(train_tensor, target_tensor)
+
+    # Get loss function
+    if loss_kwargs is None:
+        loss_kwargs = {}
+    criterion = get_loss_function(loss_type, **loss_kwargs)
+
+    # Extract previous values (last value from sequence) for directional loss
+    # Shape: (num_samples, num_features) -> we need the 'Close' price (index 3)
+    previous_values = train_tensor[:, -1, 3].unsqueeze(1)  # Index 3 is 'Close' in OHLCV
+
+    dataset = TensorDataset(train_tensor, target_tensor, previous_values)
     loader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
     epochs = int(epochs)
     train_losses = []
     val_losses = []
 
+    # Check if loss function supports directional mode
+    use_directional = hasattr(criterion, 'direction_weight')
+
     for epoch in range(epochs):
         model.train()
         epoch_loss = 0
-        for batch_x, batch_y in loader:
+        for batch_data in loader:
+            batch_x, batch_y = batch_data[0], batch_data[1]
             batch_x = batch_x.to(device)
             batch_y = batch_y.to(device)
+
             optimizer.zero_grad()
             output = model(batch_x)
-            loss = criterion(output, batch_y)
+
+            # Use directional loss if available
+            if use_directional and len(batch_data) > 2:
+                batch_prev = batch_data[2].to(device)
+                loss = criterion(output, batch_y, batch_prev)
+            else:
+                loss = criterion(output, batch_y)
+
             loss.backward()
             optimizer.step()
             epoch_loss += loss.item()
@@ -63,7 +87,14 @@ def train_gru_model(model, train_tensor, target_tensor, epochs=10, lr=0.001, bat
             model.eval()
             with torch.no_grad():
                 val_output = model(val_tensor)
-                val_loss = criterion(val_output, val_target).item()
+
+                # Use directional loss for validation if available
+                if use_directional:
+                    val_prev = val_tensor[:, -1, 3].unsqueeze(1)
+                    val_loss = criterion(val_output, val_target, val_prev).item()
+                else:
+                    val_loss = criterion(val_output, val_target).item()
+
                 val_losses.append(val_loss)
 
             if verbose:
